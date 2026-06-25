@@ -21,7 +21,7 @@ export const site = {
   facebook: null as string | null,
   horarioAtendimento: null as string | null,
 
-  url: "https://patriciaejulio.com.br", // provisório (sem hospedagem definida)
+  url: "https://patricia-e-julio-site.vercel.app",
   instagramUrl: "https://www.instagram.com/julio_e_patricia_corretores/",
 } as const;
 
