@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --beige: #f5efeb;
+  --navy: #2f4156;
+  --teal: #567c8d;
+  --sky: #c8d9e6;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--beige);
+    color: var(--navy);
+    font-feature-settings: "ss01", "cv01";
+  }
+
+  ::selection {
+    background-color: var(--navy);
+    color: var(--beige);
+  }
+
+  /* foco visível e acessível */
+  :focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  /* container editorial com respiro lateral fluido */
+  .editorial {
+    width: 100%;
+    max-width: theme("maxWidth.editorial");
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 6rem);
+  }
+
+  /* máscara de revelação vertical (hero / imagens) */
+  .reveal-mask {
+    clip-path: inset(100% 0 0 0);
+  }
+
+  .title-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Lenis: rolagem suave */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Respeitar preferência de movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

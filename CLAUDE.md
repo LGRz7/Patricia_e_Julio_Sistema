@@ -113,3 +113,62 @@ Quando o usuário pedir skill nova:
 4. Se a skill precisar de arquivos de apoio (templates, exemplos),
    criar dentro da pasta da skill
 5. Seguir o fluxo da skill-creator nativa do Claude Code
+
+---
+
+# Patrícia e Júlio — Corretores de Imóveis
+
+> Regras específicas desse negócio. Aplicadas pelo `/instalar`.
+
+## O que é esse workspace
+
+Operação de marketing e posicionamento digital da dupla de corretores
+Patrícia Vidal e Júlio Aguiar. O sistema produz conteúdo, identidade
+visual, site e materiais pra eles venderem mais imóveis. Quem opera o
+sistema é o Yann (implementação com IA), construindo tudo PARA eles.
+
+**Estrutura de pastas:**
+- `_memoria/` — quem é o negócio, como falamos, foco atual
+- `identidade/` — marca aplicada em tudo que o sistema gera (tons pastéis)
+- `marketing/` — campanhas, conteúdo, carrosséis, posts
+- `saidas/` — documentos e peças pontuais
+- `dados/` — arquivos a analisar (exports de leads, planilhas)
+- `scripts/` — automações
+
+## Sobre o negócio
+
+Patrícia e Júlio são corretores de imóveis autônomos (não CNPJ) atuando
+juntos em São Gonçalo/RJ e região. Atendem de famílias buscando a
+primeira casa própria (ticket mais acessível) até clientes de ticket
+alto. Tocam o negócio sozinhos.
+
+## Foco atual
+
+Resolver o gargalo de conversão (muito lead entrando, pouco virando
+visita/venda) e profissionalizar o posicionamento digital — que hoje é
+amador. Prioridade: conteúdo com identidade, site e funil. Sem orçamento
+pra mídia paga no momento. Ver `_memoria/estrategia.md`.
+
+## Tom de voz
+
+Direto, prático, focado em benefício real e diferencial. Nada de copy
+genérica de corretor. Ver `_memoria/preferencias.md` pra detalhe.
+
+## Regras do sistema
+
+- **Identificação legal obrigatória:** toda peça oficial usa "Corretores
+  de Imóveis" + nomes + CRECI (Patrícia Vidal / CRECI 68850 · Júlio
+  Aguiar / CRECI 79271). NÃO criar logo de marca — eles não são CNPJ.
+- **Paleta:** sempre tons pastéis (ver `identidade/design-guide.md`).
+- Conteúdo e campanhas salvam em `marketing/`.
+- Peças pontuais salvam em `saidas/`.
+- Antes de qualquer peça visual, ler `identidade/design-guide.md`.
+
+## Ferramentas conectadas
+
+- [ ] Instagram (canal atual deles)
+- [ ] Facebook (canal atual deles)
+- [ ] Google Ads
+- [ ] Meta Ads
+
+*(Marcar conforme for instalando os MCPs)*

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Fachada — imagem provisória">
+  <rect width="1200" height="800" fill="#C8D9E6"/>
+  <rect x="300" y="180" width="600" height="500" fill="#2F4156"/>
+  <g fill="#F5EFEB" opacity="0.85">
+    <rect x="350" y="240" width="90" height="120"/>
+    <rect x="480" y="240" width="90" height="120"/>
+    <rect x="610" y="240" width="90" height="120"/>
+    <rect x="740" y="240" width="90" height="120"/>
+    <rect x="350" y="400" width="90" height="120"/>
+    <rect x="480" y="400" width="90" height="120"/>
+    <rect x="610" y="400" width="90" height="120"/>
+    <rect x="740" y="400" width="90" height="120"/>
+  </g>
+  <rect y="680" width="1200" height="120" fill="#567C8D"/>
+  <text x="600" y="752" font-family="system-ui, sans-serif" font-size="24" fill="#F5EFEB" text-anchor="middle" letter-spacing="1">FACHADA — IMAGEM PROVISÓRIA</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" role="img" aria-label="Interior — imagem provisória">
+  <rect width="800" height="1000" fill="#F5EFEB"/>
+  <rect x="80" y="120" width="640" height="620" fill="#C8D9E6"/>
+  <rect x="140" y="420" width="520" height="320" fill="#567C8D"/>
+  <rect x="200" y="180" width="400" height="180" fill="#2F4156" opacity="0.85"/>
+  <rect y="900" width="800" height="100" fill="#2F4156"/>
+  <text x="400" y="962" font-family="system-ui, sans-serif" font-size="22" fill="#F5EFEB" text-anchor="middle" letter-spacing="1">INTERIOR — IMAGEM PROVISÓRIA</text>
+</svg>
