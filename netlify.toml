@@ -1,0 +1,9 @@
+# Configuração de deploy na Netlify.
+# O app Next.js fica na subpasta "site/", então definimos a base aqui.
+[build]
+  base = "site"
+  command = "npm run build"
+
+# Plugin oficial de Next.js da Netlify (instala automaticamente no build).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
