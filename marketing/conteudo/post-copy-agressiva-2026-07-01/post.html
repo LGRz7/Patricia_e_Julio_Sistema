@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Post — Copy agressiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body { background: #111; }
+
+  .slide {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  /* Foto full-bleed */
+  .photo {
+    position: absolute;
+    inset: 0;
+    background: url('foto.png') center center / cover no-repeat;
+  }
+
+  /* Gradiente em duas camadas:
+     topo leve (marca + legibilidade) e base pesada (texto principal) */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg,
+        rgba(27, 37, 48, 0.72) 0%,
+        rgba(27, 37, 48, 0.05) 38%,
+        rgba(27, 37, 48, 0.05) 52%,
+        rgba(27, 37, 48, 0.88) 100%
+      );
+  }
+
+  /* conteúdo */
+  .content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+    color: #F5EFEB;
+  }
+
+  /* topo */
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .brand {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand em { opacity: .45; font-style: normal; }
+  .tag {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    border: 1.5px solid rgba(200, 217, 230, 0.55);
+    color: #C8D9E6;
+    padding: 10px 20px;
+    border-radius: 999px;
+  }
+
+  /* texto principal — ocupa o terço inferior */
+  .main {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .label {
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.30em;
+    color: #C8D9E6;
+    margin-bottom: 28px;
+  }
+  .headline {
+    font-size: 86px;
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+    max-width: 13ch;
+  }
+  .headline em {
+    font-style: normal;
+    color: #C8D9E6; /* sky — destaque suave */
+  }
+  .sub {
+    margin-top: 28px;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.5;
+    max-width: 30ch;
+    opacity: 0.75;
+  }
+  .cta-row {
+    margin-top: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .creci {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.7;
+    opacity: 0.8;
+  }
+  .handle {
+    font-size: 20px;
+    font-weight: 700;
+    color: #C8D9E6;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="photo"></div>
+  <div class="overlay"></div>
+
+  <div class="content">
+    <!-- topo -->
+    <div class="top">
+      <div class="brand">Patrícia e Júlio<em>*</em></div>
+      <div class="tag">Casa própria</div>
+    </div>
+
+    <!-- texto -->
+    <div class="main">
+      <div class="label">Pensa nisso</div>
+
+      <h1 class="headline">
+        Quem tem casa própria não acordou
+        <em>diferente</em>
+        de você.
+      </h1>
+
+      <p class="sub">
+        Só deu o primeiro passo. A gente te ajuda a dar o seu — sem enrolação e sem pressão.
+      </p>
+
+      <div class="cta-row">
+        <div class="creci">
+          Patrícia Vidal · CRECI 68850<br/>
+          Júlio Aguiar · CRECI 79271
+        </div>
+        <div class="handle">@julio_e_patricia_corretores</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

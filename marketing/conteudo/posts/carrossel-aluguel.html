@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Carrossel — Sair do aluguel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#2F4156;
+    --teal:#567C8D;
+    --sky:#C8D9E6;
+    --beige:#F5EFEB;
+    --ink:#1B2530;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#888;font-family:'Inter',sans-serif;}
+  .slide{
+    width:1080px;height:1350px;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;
+    padding:90px 84px;margin:0 auto 40px;
+  }
+  /* fundos */
+  .bg-navy{background:var(--navy);color:var(--beige);}
+  .bg-beige{background:var(--beige);color:var(--navy);}
+  .bg-teal{background:var(--teal);color:var(--beige);}
+  .bg-ink{background:var(--ink);color:var(--beige);}
+
+  /* topo: marca + contador */
+  .top{display:flex;justify-content:space-between;align-items:center;}
+  .brand{font-family:'Manrope';font-weight:700;font-size:26px;letter-spacing:-0.01em;}
+  .brand span{opacity:.55;}
+  .counter{font-size:18px;font-weight:500;letter-spacing:0.18em;opacity:.6;}
+
+  .mid{flex:1;display:flex;flex-direction:column;justify-content:center;}
+
+  .eyebrow{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:0.3em;}
+  .rule{height:4px;width:84px;background:currentColor;opacity:.85;margin:34px 0;border:none;}
+  .title{font-family:'Manrope';font-weight:800;font-size:104px;line-height:0.98;letter-spacing:-0.04em;}
+  .h2{font-family:'Manrope';font-weight:800;font-size:78px;line-height:1.05;letter-spacing:-0.035em;}
+  .body{font-size:30px;font-weight:500;line-height:1.5;max-width:18ch;}
+  .num{font-family:'Manrope';font-weight:800;font-size:300px;line-height:.9;letter-spacing:-0.04em;}
+  .quote{font-family:'Manrope';font-weight:800;font-size:340px;line-height:.7;opacity:.16;height:140px;}
+
+  .accent{color:var(--teal);}
+  .accent-sky{color:var(--sky);}
+  .on-light-accent{color:var(--teal);}
+
+  /* rodapé */
+  .foot{font-size:20px;font-weight:600;letter-spacing:0.02em;opacity:.7;}
+  .handle{font-size:20px;font-weight:600;}
+
+  /* CTA final */
+  .cta-btn{display:inline-block;background:var(--beige);color:var(--navy);
+    font-family:'Manrope';font-weight:700;font-size:30px;padding:24px 46px;border-radius:999px;}
+  .creci{font-size:24px;font-weight:600;line-height:1.7;opacity:.85;}
+</style>
+</head>
+<body>
+
+<!-- 01 CAPA -->
+<section class="slide bg-navy">
+  <div class="top">
+    <div class="brand">Patrícia e Júlio<span>*</span></div>
+    <div class="counter">01 / 07</div>
+  </div>
+  <div class="mid">
+    <div class="eyebrow accent-sky">Casa própria</div>
+    <hr class="rule" />
+    <h1 class="title">Até quando<br/>pagar o imóvel<br/>dos outros?</h1>
+  </div>
+  <div class="top">
+    <div class="handle">@julio_e_patricia_corretores</div>
+    <div class="foot">Arraste →</div>
+  </div>
+</section>
+
+<!-- 02 NÚMERO -->
+<section class="slide bg-beige">
+  <div class="top">
+    <div class="brand">Patrícia e Júlio<span>*</span></div>
+    <div class="counter">02 / 07</div>
+  </div>
+  <div class="mid">
+    <div class="eyebrow on-light-accent">A conta que ninguém mostra</div>
+    <div class="num accent">R$90 mil</div>
+    <p class="body" style="margin-top:30px;max-width:22ch;">É quanto some em <b>5 anos</b> com um aluguel de R$ 1.500/mês. E nada disso vira seu.</p>
+  </div>
+  <div class="foot">julioepatricia · corretores de imóveis</div>
+</section>
+
+<!-- 03 INSIGHT (escuro) -->
+<section class="slide bg-navy">
+  <div class="top">
+    <div class="brand">Patrícia e Júlio<span>*</span></div>
+    <div class="counter">03 / 07</div>
+  </div>
+  <div class="mid">
+    <div class="eyebrow accent-sky">A real</div>
+    <hr class="rule" />
+    <h2 class="h2">O problema não é<br/>o quanto custa<br/>comprar.<br/><span class="accent-sky">É o quanto<br/>custa adiar.</span></h2>
+  </div>
+  <div class="foot">@julio_e_patricia_corretores</div>
+</section>
+
+<!-- 04 INSIGHT (claro) -->
+<section class="slide bg-beige">
+  <div class="top">
+    <div class="brand">Patrícia e Júlio<span>*</span></div>
+    <div class="counter">04 / 07</div>
+  </div>
+  <div class="mid">
+    <div class="eyebrow on-light-accent">Por onde começar</div>
+    <hr class="rule" />
+    <h2 class="h2">Você não precisa<br/>ter tudo pronto.</h2>
+    <p class="body" style="margin-top:34px;max-width:22ch;">Precisa do <b>primeiro passo certo</b> — e da pessoa certa do seu lado.</p>
+  </div>
+  <div class="foot">julioepatricia · corretores de imóveis</div>
+</section>
+
+<!-- 05 INSIGHT (teal) -->
+<section class="slide bg-teal">
+  <div class="top">
+    <div class="brand">Patrícia e Júlio<span>*</span></div>
+    <div class="counter">05 / 07</div>
+  </div>
+  <div class="mid">
+    <div class="eyebrow accent-sky">Aqui, dá pra começar</div>
+    <hr class="rule" />
+    <h2 class="h2">Em São Gonçalo<br/>e região, tem<br/>imóvel a partir de<br/><span style="font-size:120px;display:inline-block;margin-top:14px;">R$ 170 mil.</span></h2>
+  </div>
+  <div class="foot">@julio_e_patricia_corretores</div>
+</section>
+
+<!-- 06 CITAÇÃO (claro) -->
+<section class="slide bg-beige">
+  <div class="top">
+    <div class="brand">Patrícia e Júlio<span>*</span></div>
+    <div class="counter">06 / 07</div>
+  </div>
+  <div class="mid">
+    <div class="quote accent">"</div>
+    <h2 class="h2" style="margin-top:10px;">"Mas será que<br/>eu consigo<br/>financiar?"</h2>
+    <p class="body" style="margin-top:34px;max-width:24ch;">A gente te mostra os caminhos — sem enrolação e sem pressão.</p>
+  </div>
+  <div class="foot">julioepatricia · corretores de imóveis</div>
+</section>
+
+<!-- 07 CTA FINAL (navy) -->
+<section class="slide bg-navy" style="align-items:flex-start;">
+  <div class="top" style="width:100%;">
+    <div class="brand">Patrícia e Júlio<span>*</span></div>
+    <div class="counter">07 / 07</div>
+  </div>
+  <div class="mid">
+    <h2 class="h2">Bora achar<br/>o seu?</h2>
+    <p class="body" style="margin-top:28px;max-width:24ch;">Chama no WhatsApp. A gente começa a procurar com você hoje.</p>
+    <div style="margin-top:46px;" class="cta-btn">Falar no WhatsApp</div>
+  </div>
+  <div style="width:100%;">
+    <div class="creci">
+      Patrícia Vidal · CRECI 68850<br/>
+      Júlio Aguiar · CRECI 79271
+    </div>
+    <div class="handle accent-sky" style="margin-top:18px;">@julio_e_patricia_corretores</div>
+  </div>
+</section>
+
+</body>
+</html>
