@@ -27,3 +27,5 @@ dados/*
 
 # Pasta antiga do site (movida para patricia-julio/)
 site/
+.vercel
+.env*

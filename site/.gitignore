@@ -38,3 +38,5 @@ next-env.d.ts
 
 # Criativos gerados pelo Estúdio (POST /api/marketing/gerar) — regeneráveis
 /public/gen/
+.vercel
+.env*

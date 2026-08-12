@@ -9,7 +9,7 @@
     "lint": "next lint",
     "gerar-hash": "node scripts/gerar-hash.mjs",
     "sync-personas": "node scripts/sync-personas.mjs",
-    "postinstall": "playwright install chromium --with-deps"
+    "postinstall": "playwright install chromium"
   },
   "dependencies": {
     "@huggingface/inference": "^4.13.25",
