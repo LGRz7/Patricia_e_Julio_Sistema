@@ -1,0 +1,3 @@
+Deploy timestamp: 2026-08-12
+Root Directory configurado: patricia-julio
+Este arquivo força um novo deploy na Vercel

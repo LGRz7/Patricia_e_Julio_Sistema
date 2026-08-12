@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="Imagem provisória de arquitetura">
+  <rect width="1600" height="1000" fill="#C8D9E6"/>
+  <rect y="640" width="1600" height="360" fill="#567C8D"/>
+  <g fill="#2F4156" opacity="0.92">
+    <rect x="180" y="360" width="430" height="420"/>
+    <rect x="610" y="280" width="360" height="500"/>
+    <rect x="970" y="430" width="450" height="350"/>
+  </g>
+  <g fill="#F5EFEB" opacity="0.85">
+    <rect x="230" y="420" width="80" height="120"/>
+    <rect x="350" y="420" width="80" height="120"/>
+    <rect x="470" y="420" width="80" height="120"/>
+    <rect x="660" y="340" width="90" height="140"/>
+    <rect x="790" y="340" width="90" height="140"/>
+    <rect x="1030" y="490" width="100" height="130"/>
+    <rect x="1170" y="490" width="100" height="130"/>
+  </g>
+  <text x="800" y="930" font-family="system-ui, sans-serif" font-size="30" fill="#F5EFEB" text-anchor="middle" letter-spacing="2">IMAGEM PROVISÓRIA — SUBSTITUIR PELA FOTO REAL DO IMÓVEL</text>
+</svg>

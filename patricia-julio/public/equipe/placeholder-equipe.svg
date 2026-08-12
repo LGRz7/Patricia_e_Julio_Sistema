@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 900 1100" role="img" aria-label="Foto dos corretores — imagem provisória">
+  <rect width="900" height="1100" fill="#C8D9E6"/>
+  <g fill="#2F4156" opacity="0.9">
+    <circle cx="320" cy="380" r="120"/>
+    <rect x="170" y="500" width="300" height="420" rx="40"/>
+    <circle cx="600" cy="360" r="120"/>
+    <rect x="450" y="480" width="300" height="440" rx="40"/>
+  </g>
+  <rect y="1000" width="900" height="100" fill="#567C8D"/>
+  <text x="450" y="1062" font-family="system-ui, sans-serif" font-size="26" fill="#F5EFEB" text-anchor="middle" letter-spacing="1">FOTO DOS CORRETORES — PROVISÓRIA</text>
+</svg>

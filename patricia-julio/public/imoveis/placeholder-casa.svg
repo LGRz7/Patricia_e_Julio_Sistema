@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Casa — imagem provisória">
+  <rect width="1200" height="800" fill="#C8D9E6"/>
+  <rect y="520" width="1200" height="280" fill="#567C8D"/>
+  <rect x="250" y="300" width="700" height="320" fill="#2F4156"/>
+  <rect x="420" y="220" width="360" height="100" fill="#2F4156" opacity="0.8"/>
+  <g fill="#F5EFEB" opacity="0.85">
+    <rect x="320" y="360" width="120" height="160"/>
+    <rect x="540" y="360" width="120" height="160"/>
+    <rect x="760" y="360" width="120" height="160"/>
+  </g>
+  <text x="600" y="760" font-family="system-ui, sans-serif" font-size="24" fill="#F5EFEB" text-anchor="middle" letter-spacing="1">CASA — IMAGEM PROVISÓRIA</text>
+</svg>

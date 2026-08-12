@@ -1,0 +1,40 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Painel — dados runtime (persistência local; em prod usa Vercel Blob)
+# Cobre imóveis publicados, ACMs, pedidos de marketing, meta semanal.
+/data/*.json
+/data/uploads/
+/data/tmp/
+/data/scraper-cache/
+
+# Playwright (~200 MB, baixado por npx playwright install)
+/.playwright/
+
+# Criativos gerados pelo Estúdio (POST /api/marketing/gerar) — regeneráveis
+/public/gen/
