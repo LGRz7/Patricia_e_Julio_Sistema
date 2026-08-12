@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "src/app/api/marketing/gerar/route.ts": {
+      "maxDuration": 60,
+      "memory": 2048
+    }
+  },
+  "installCommand": "npm install && npx playwright install chromium --with-deps"
+}
