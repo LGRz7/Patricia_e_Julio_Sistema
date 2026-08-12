@@ -1,7 +1,0 @@
-{
-  "buildCommand": "cd patricia-julio && npm install && npm run build",
-  "devCommand": "cd patricia-julio && npm run dev",
-  "installCommand": "cd patricia-julio && npm install && npx playwright install chromium --with-deps",
-  "outputDirectory": "patricia-julio/.next",
-  "framework": "nextjs"
-}
