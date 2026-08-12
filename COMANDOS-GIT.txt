@@ -1,0 +1,62 @@
+===========================================
+COMANDOS GIT PRONTOS - COPIE E COLE
+===========================================
+
+Se você tiver Git instalado, copie e cole estes comandos no PowerShell:
+
+-------------------------------------------
+1. NAVEGAR PARA O PROJETO
+-------------------------------------------
+cd C:\Users\LGR\Downloads\Works\MazyOS
+
+-------------------------------------------
+2. VER O QUE MUDOU
+-------------------------------------------
+git status
+
+-------------------------------------------
+3. ADICIONAR TODOS OS ARQUIVOS
+-------------------------------------------
+git add site/src/lib/painel/planejador-slides.server.ts
+git add site/src/lib/painel/template-renderer.server.ts
+git add site/src/app/api/marketing/gerar/route.ts
+git add site/package.json
+git add site/vercel.json
+git add DEPLOY-RAPIDO.md
+git add DEPLOY-INSTRUCTIONS.md
+git add DEPLOY-STATUS.md
+
+-------------------------------------------
+4. FAZER COMMIT
+-------------------------------------------
+git commit -m "feat: templates HTML + Playwright no Estúdio
+
+- Criar planejador-slides.server.ts (gera estrutura JSON)
+- Criar template-renderer.server.ts (renderiza HTML via Playwright)
+- Atualizar /api/marketing/gerar para novo fluxo
+- Adicionar playwright + postinstall no package.json
+- Criar vercel.json com config otimizada (60s timeout, 3GB RAM)
+- Adicionar guias de deploy (DEPLOY-RAPIDO.md, DEPLOY-STATUS.md)
+- Resultado: criativos 100% padronizados, zero erros"
+
+-------------------------------------------
+5. PUSH PARA O REPOSITÓRIO
+-------------------------------------------
+git push origin main
+
+-------------------------------------------
+✅ PRONTO!
+-------------------------------------------
+
+Agora:
+1. Acesse https://vercel.com/dashboard
+2. Vá em Settings → Environment Variables
+3. Adicione as 4 variáveis:
+   - PAINEL_JWT_SECRET
+   - PAINEL_SENHA_PATRICIA
+   - PAINEL_SENHA_JULIO
+   - HUGGINGFACE_API_TOKEN
+4. Aguarde o deploy (3-5 min)
+5. Teste em produção!
+
+===========================================

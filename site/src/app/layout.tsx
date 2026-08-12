@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Inter, Manrope, Playfair_Display } from "next/font/google";
 import "@/styles/globals.css";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
+import { CopyGuard } from "@/components/providers/CopyGuard";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsappFloat } from "@/components/ui/WhatsappFloat";
@@ -21,6 +22,15 @@ const manrope = Manrope({
   weight: ["500", "600", "700", "800"],
 });
 
+// Fonte serifada editorial — usada nos títulos dos criativos do Estúdio.
+// Referência: identidade/design-guide.md ("títulos: serifada elegante").
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
@@ -38,14 +48,27 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  minimumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${manrope.variable}`}>
-      <body className="font-sans antialiased">
+    <html lang="pt-BR" className={`${inter.variable} ${manrope.variable} ${playfair.variable}`}>
+      {/* suppressHydrationWarning: alguns providers (Lenis/GSAP) e extensões de
+          navegador (ex: Grammarly, LastPass) injetam styles no <body> antes
+          da hidratação. É seguro suprimir aqui — não afeta nada visual. */}
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <CopyGuard />
         <JsonLd />
         <SmoothScroll>
           <Header />

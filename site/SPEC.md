@@ -1,15 +1,16 @@
 # SPEC — Site Imobiliário · Patrícia e Júlio Corretores de Imóveis
 
-> Documento de planejamento (Spec Driven Development). Nenhum código é
-> escrito antes da aprovação desta SPEC. Versão 0.1 — aguardando aprovação.
+> Documento de planejamento (Spec Driven Development).
+> Versão 0.2 · atualizado em 29/07/2026 com o reposicionamento de praça (São Gonçalo → Niterói / Maricá / Rio) confirmado pela Patrícia e público-alvo detalhado em `_memoria/publico-alvo.md` (5 personas).
 
 ---
 
 ## 1. Entendimento do projeto
 
 Site institucional imobiliário **premium** para uma dupla de corretores
-autônomos (Patrícia Vidal e Júlio Aguiar), atuando em São Gonçalo/RJ e
-região. Não é ERP, marketplace nem portal genérico — é uma vitrine
+autônomos (Patrícia Vidal e Júlio Aguiar), atuando em **Niterói, Maricá
+e Rio de Janeiro** (reposicionamento em curso — antes o foco era São
+Gonçalo). Não é ERP, marketplace nem portal genérico — é uma vitrine
 editorial de alto padrão, focada em apresentar os profissionais como
 especialistas reais, valorizar cada imóvel como produto de alto valor e
 converter visitantes em conversas no WhatsApp.
@@ -28,11 +29,21 @@ com o profissional certo.
 
 ## 3. Público-alvo
 
-Famílias de médio a alto ticket em São Gonçalo/RJ e arredores — desde
-quem busca a primeira casa própria (ticket mais acessível) até clientes
-de alto padrão. Pessoas que valorizam segurança, atendimento próximo e
-querem sentir que estão lidando com profissionais sérios, não com mais
-um corretor genérico.
+**Renda mensal a partir de R$ 7.000, idade 26+, qualquer gênero, buscando
+imóveis em Niterói, Maricá e Rio de Janeiro** (confirmado pela Patrícia
+em 29/07/2026). Dentro desse recorte existem 5 personas — detalhamento
+completo com dor, gatilho de scroll, objeção e argumento de fechamento
+em `_memoria/publico-alvo.md`:
+
+1. **Primeira compra consciente** (26–34, R$ 7–15k) — 2Q com FGTS
+2. **Upgrade familiar** (32–45, R$ 12–25k) — 3Q + escola + lazer
+3. **Investidor Maricá** (28–55, R$ 10k+) — valorização royalties
+4. **Segunda casa / praia** (38–60, R$ 15k+) — Maricá / Piratininga
+5. **Migrante do Rio pra Niterói** (30–45, R$ 10–25k) — Icaraí, Ingá
+
+Toda copy do site (hero, manifesto, categorias, contato final) e todo
+criativo publicado deve escolher **uma** persona por vez — nunca falar
+com as 5 no mesmo conteúdo.
 
 ## 4. Perfil dos profissionais
 
@@ -45,10 +56,18 @@ um corretor genérico.
 
 ## 5. Tipos de imóvel e regiões
 
-- **Tipos:** apartamentos, casas, imóveis para morar ou investir.
-  (Confirmar com eles a lista final de categorias.)
-- **Região:** São Gonçalo/RJ e arredores (ex. real fornecido: Parada 40,
-  Rua da Caminhada).
+- **Tipos:** apartamentos, casas, imóveis para morar ou investir (na
+  planta e prontos).
+- **Regiões e faixa de ticket:**
+  - **Niterói** — R$ 350k a R$ 1,2M. Icaraí, Ingá, Santa Rosa, São
+    Francisco, Piratininga, Fonseca (parte).
+  - **Maricá** — R$ 250k a R$ 900k. Itaipuaçu, Barra de Maricá, Centro,
+    Ponta Negra, Inoã. Perfil dividido: segunda casa (praia) +
+    investidor (royalties do pré-sal).
+  - **Rio de Janeiro** — R$ 300k a R$ 1,5M. Tijuca, Vila Isabel, Grajaú,
+    Méier, Barra, Recreio, Freguesia, Taquara.
+- Base geográfica de operação atualizada em `_memoria/empresa.md` e em
+  `_memoria/publico-alvo.md`.
 
 ## 6. Posicionamento e direção visual
 

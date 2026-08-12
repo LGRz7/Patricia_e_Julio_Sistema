@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { WhatsappIcon } from "./WhatsappIcon";
 import { linkWhatsapp, mensagemContatoGeral } from "@/lib/whatsapp";
 
@@ -9,6 +10,10 @@ import { linkWhatsapp, mensagemContatoGeral } from "@/lib/whatsapp";
  * rótulo no hover (desktop). Se não houver número, leva ao /contato.
  */
 export function WhatsappFloat() {
+  const pathname = usePathname();
+  // Painel tem interface própria — não renderizar botão flutuante do site
+  if (pathname?.startsWith("/painel")) return null;
+
   const link = linkWhatsapp({ mensagem: mensagemContatoGeral() });
   const href = link ?? "/contato";
   const external = Boolean(link);

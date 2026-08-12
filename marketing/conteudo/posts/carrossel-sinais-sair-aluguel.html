@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Carrossel â€” 3 sinais de que vocÃª estÃ¡ pronto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#2F4156;--teal:#567C8D;--sky:#C8D9E6;--beige:#F5EFEB;--ink:#1B2530;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#555;font-family:'Manrope',sans-serif;}
+.slide{
+  width:1080px;height:1350px;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;padding:80px 78px;margin:0 auto 40px;
+}
+
+/* fundos */
+.bg-ink{background:var(--ink);color:var(--beige);}
+.bg-navy{background:var(--navy);color:var(--beige);}
+.bg-beige{background:var(--beige);color:var(--navy);}
+.bg-teal{background:var(--teal);color:var(--beige);}
+
+/* Ã­cones de fundo (decorativos, grandes) */
+.icon-bg{position:absolute;pointer-events:none;opacity:.06;}
+.icon-bg img{width:100%;height:auto;}
+.icon-chave{width:480px;right:-80px;bottom:-60px;transform:rotate(-15deg);}
+.icon-casa{width:520px;left:-60px;top:-40px;transform:rotate(8deg);}
+.icon-chave-sm{width:300px;right:-40px;top:60px;transform:rotate(12deg);}
+.icon-casa-sm{width:340px;left:-50px;bottom:-30px;transform:rotate(-6deg);}
+.icon-center{width:600px;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-5deg);opacity:.04;}
+
+/* topo */
+.top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;}
+.brand{font-weight:700;font-size:24px;letter-spacing:-0.01em;}
+.brand span{opacity:.5;}
+.counter{font-size:16px;font-weight:500;letter-spacing:0.18em;opacity:.55;}
+
+/* mid */
+.mid{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;}
+.eyebrow{font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.32em;margin-bottom:28px;}
+.eyebrow.accent{color:var(--teal);}
+.eyebrow.sky{color:var(--sky);}
+.title{font-weight:800;font-size:92px;line-height:.98;letter-spacing:-0.04em;}
+.h2{font-weight:800;font-size:72px;line-height:1.04;letter-spacing:-0.035em;}
+.body{font-size:28px;font-weight:500;line-height:1.55;max-width:22ch;margin-top:24px;opacity:.8;}
+.num-big{font-weight:800;font-size:200px;line-height:.8;letter-spacing:-0.04em;color:var(--teal);margin-bottom:12px;}
+.em-sky{color:var(--sky);}
+
+/* rodapÃ© */
+.foot{position:relative;z-index:2;font-size:18px;font-weight:600;opacity:.6;}
+.handle{font-size:18px;font-weight:700;color:var(--sky);}
+
+/* CTA */
+.cta-btn{display:inline-block;background:var(--beige);color:var(--navy);font-weight:700;font-size:28px;padding:22px 44px;border-radius:999px;margin-top:36px;}
+.creci{font-size:22px;font-weight:600;line-height:1.7;opacity:.85;margin-top:32px;}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 â€” CAPA (chave grande no fundo) -->
+<section class="slide bg-ink">
+  <div class="icon-bg icon-chave"><img src="fotos/chave-icone.png" alt=""/></div>
+  <div class="top">
+    <div class="brand">PatrÃ­cia e JÃºlio<span>*</span></div>
+    <div class="counter">01 / 06</div>
+  </div>
+  <div class="mid">
+    <div class="eyebrow sky">SerÃ¡ que Ã© a hora?</div>
+    <h1 class="title">3 sinais de que<br/>vocÃª estÃ¡ pronto<br/>pra <span class="em-sky">sair do<br/>aluguel.</span></h1>
+  </div>
+  <div class="top">
+    <div class="handle">@julio_e_patricia_corretores</div>
+    <div class="foot">Arraste â†’</div>
+  </div>
+</section>
+
+<!-- SLIDE 2 â€” Sinal 01 (casa no fundo) -->
+<section class="slide bg-navy">
+  <div class="icon-bg icon-casa-sm"><img src="fotos/casa-icone.png" alt=""/></div>
+  <div class="top">
+    <div class="brand">PatrÃ­cia e JÃºlio<span>*</span></div>
+    <div class="counter">02 / 06</div>
+  </div>
+  <div class="mid">
+    <div class="num-big">01</div>
+    <h2 class="h2">VocÃª jÃ¡ sabe<br/>quanto paga de<br/>aluguel por ano.</h2>
+    <p class="body">E toda vez que faz a conta, dÃ¡ uma dor no peito. Esse dinheiro nÃ£o volta.</p>
+  </div>
+  <div class="foot">julioepatricia Â· corretores de imÃ³veis</div>
+</section>
+
+<!-- SLIDE 3 â€” Sinal 02 (chave no fundo) -->
+<section class="slide bg-beige">
+  <div class="icon-bg icon-chave-sm"><img src="fotos/chave-icone.png" alt=""/></div>
+  <div class="top">
+    <div class="brand" style="color:var(--navy);">PatrÃ­cia e JÃºlio<span>*</span></div>
+    <div class="counter" style="color:var(--navy);">03 / 06</div>
+  </div>
+  <div class="mid">
+    <div class="num-big">02</div>
+    <h2 class="h2">VocÃª jÃ¡ pesquisa<br/>preÃ§os, mesmo<br/>sem certeza.</h2>
+    <p class="body">Se vocÃª jÃ¡ olha imÃ³vel "por curiosidade", nÃ£o Ã© mais curiosidade. Ã‰ vontade.</p>
+  </div>
+  <div class="foot" style="color:var(--navy);">@julio_e_patricia_corretores</div>
+</section>
+
+<!-- SLIDE 4 â€” Sinal 03 (casa grande no fundo) -->
+<section class="slide bg-ink">
+  <div class="icon-bg icon-center"><img src="fotos/casa-icone.png" alt=""/></div>
+  <div class="top">
+    <div class="brand">PatrÃ­cia e JÃºlio<span>*</span></div>
+    <div class="counter">04 / 06</div>
+  </div>
+  <div class="mid">
+    <div class="num-big" style="color:var(--sky);">03</div>
+    <h2 class="h2">VocÃª imagina<br/>como seria<br/>chamar um lugar<br/>de <span class="em-sky">seu.</span></h2>
+    <p class="body">NÃ£o precisa ser mansÃ£o. Precisa ser o comeÃ§o certo.</p>
+  </div>
+  <div class="foot">julioepatricia Â· corretores de imÃ³veis</div>
+</section>
+
+<!-- SLIDE 5 â€” ReforÃ§o (chave + casa) -->
+<section class="slide bg-teal">
+  <div class="icon-bg icon-casa" style="opacity:.08;"><img src="fotos/casa-icone.png" alt=""/></div>
+  <div class="icon-bg icon-chave-sm" style="opacity:.08;bottom:40px;top:auto;"><img src="fotos/chave-icone.png" alt=""/></div>
+  <div class="top">
+    <div class="brand">PatrÃ­cia e JÃºlio<span>*</span></div>
+    <div class="counter">05 / 06</div>
+  </div>
+  <div class="mid">
+    <h2 class="h2" style="max-width:14ch;">Se vocÃª se viu<br/>em pelo menos<br/>um desses,<br/>jÃ¡ dÃ¡ pra<br/>comeÃ§ar.</h2>
+    <p class="body" style="max-width:26ch;">A maioria das pessoas que comprou o primeiro imÃ³vel sentia exatamente isso.</p>
+  </div>
+  <div class="foot">@julio_e_patricia_corretores</div>
+</section>
+
+<!-- SLIDE 6 â€” CTA -->
+<section class="slide bg-ink">
+  <div class="icon-bg icon-chave" style="opacity:.04;"><img src="fotos/chave-icone.png" alt=""/></div>
+  <div class="top">
+    <div class="brand">PatrÃ­cia e JÃºlio<span>*</span></div>
+    <div class="counter">06 / 06</div>
+  </div>
+  <div class="mid">
+    <h2 class="h2">Bora dar o<br/>primeiro passo?</h2>
+    <p class="body" style="max-width:26ch;">Chama a gente no WhatsApp. A gente comeÃ§a a procurar com vocÃª hoje, sem compromisso.</p>
+    <div class="cta-btn">Falar no WhatsApp</div>
+  </div>
+  <div>
+    <div class="creci">
+      PatrÃ­cia Vidal Â· CRECI 68850<br/>
+      JÃºlio Aguiar Â· CRECI 79271
+    </div>
+    <div class="handle" style="margin-top:14px;">@julio_e_patricia_corretores</div>
+  </div>
+</section>
+
+</body>
+</html>

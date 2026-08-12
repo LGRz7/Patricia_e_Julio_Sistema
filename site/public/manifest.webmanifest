@@ -1,0 +1,34 @@
+{
+  "name": "Painel · Patrícia e Júlio Corretores",
+  "short_name": "PJ Corretores",
+  "description": "Painel dos corretores Patrícia Vidal e Júlio Aguiar — mapa de trajetos, catálogo e finanças.",
+  "start_url": "/painel",
+  "scope": "/painel",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5EFEB",
+  "theme_color": "#2F4156",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo trajeto",
+      "short_name": "Trajeto",
+      "description": "Calcular rota e custo para um imóvel",
+      "url": "/painel/mapa",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Adicionar imóvel",
+      "short_name": "Novo",
+      "description": "Cadastrar imóvel no catálogo",
+      "url": "/painel/catalogo/novo",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

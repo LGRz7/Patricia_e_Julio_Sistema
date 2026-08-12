@@ -12,6 +12,37 @@ description: >
 
 Skill central de criação de conteúdo visual. Pega um tema → entrega HTMLs estilizados + PNGs prontos pra postar + legenda no padrão da marca.
 
+---
+
+## ⚠️ Patrícia e Júlio · Corretores — usar o painel deles
+
+**Contexto atual:** esse workspace opera pra dupla de corretores Patrícia Vidal e Júlio Aguiar (identidade em `_memoria/empresa.md`). Eles têm um **painel dedicado** com Estúdio de Criativos self-service em `MazyOS/site/src/app/painel/marketing/estudio`.
+
+**Regra:** quando o pedido for pra P&J (post/carrossel/story), o caminho preferencial é o Estúdio do painel — não gerar HTML+Playwright aqui. O Estúdio já tem:
+
+- 4 templates React com o sistema editorial dessa skill aplicado (Playfair Display serifado nos títulos, kerning apertado -0.035em, eyebrows Inter 800 UPPERCASE letter-spacing 0.28em, régua fina 3px, stamps circulares rotate -10deg)
+- Paleta P&J correta (Navy #2F4156 · Teal #567C8D · Sky #C8D9E6 · Beige #F5EFEB)
+- CRECIs de ambos no rodapé de tudo (68850 · 79271)
+- Parser de texto livre em `src/lib/painel/marketing-parser.ts` (heurísticas: bairro, preço em mil/milhão/R$/bruto, quartos, área, vagas, gancho por palavras-chave)
+- Integração com o catálogo de imóveis (puxa foto+dados direto do cadastro)
+- Export PNG 1080×1350/1080×1080/1080×1920 client-side via `html-to-image`
+- Histórico + meta semanal
+
+**Fluxo pra P&J:**
+1. Se o Yann tá no chat pedindo carrossel/post pra eles: aponta o corretor pro Estúdio (`/painel/marketing/estudio`) — ele descreve o que quer em texto livre OU escolhe um imóvel do catálogo, e o sistema gera
+2. Se o Yann precisa fazer manualmente (formato ainda sem template, ou copy autoral): usar essa skill normalmente. Mas seguir a **mesma linguagem visual** que os templates do Estúdio já implementam (ver seções abaixo)
+3. Quando aparecer necessidade recorrente de um formato novo (ex: carrossel Antes/Depois), abrir template no Estúdio ao invés de gerar HTML avulso — o template resolve pra sempre
+
+**Templates disponíveis no Estúdio hoje:**
+- `imovel-destaque` (Post 4:5, 1080×1350) — SOLO com foto topo + faixa navy embaixo
+- `prestacao-vs-aluguel` (Post 1:1, 1080×1080) — DUO com stamp "Melhor"
+- `story-foto-grande` (Story 9:16, 1080×1920) — CAPA cinematográfica
+- `guia-bairro` (Post 4:5, 1080×1350) — NÚMERO com foto + pontos numerados serifados
+
+Fonte de verdade dos templates: `MazyOS/site/src/components/painel/marketing/estudio/templates/*.tsx`.
+
+---
+
 ## Dependências
 
 - **Identidade visual:** `identidade/design-guide.md` — LER ANTES de criar qualquer visual

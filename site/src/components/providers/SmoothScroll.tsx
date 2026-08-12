@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 
@@ -12,7 +13,11 @@ import { gsap, ScrollTrigger } from "@/lib/gsap";
  * - desativa em telas pequenas para preservar controle/nativo no toque
  */
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   useEffect(() => {
+    // No painel, scroll nativo — evita conflito com o Leaflet e o layout fixo
+    if (pathname?.startsWith("/painel")) return;
+
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -61,7 +66,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       gsap.ticker.remove(tick);
       lenis.destroy();
     };
-  }, []);
+  }, [pathname]);
 
   return <>{children}</>;
 }

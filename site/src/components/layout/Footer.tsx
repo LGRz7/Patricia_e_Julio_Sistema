@@ -1,9 +1,15 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { profissionais } from "@/data/profissionais";
 import { site } from "@/data/site";
 import { navLinks } from "./nav-links";
 
 export function Footer() {
+  const pathname = usePathname();
+  // Painel tem shell próprio — não renderizar footer público
+  if (pathname?.startsWith("/painel")) return null;
+
   return (
     <footer className="bg-navy text-beige">
       <div className="editorial py-16 md:py-24">

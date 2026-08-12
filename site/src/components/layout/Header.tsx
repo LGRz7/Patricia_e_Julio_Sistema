@@ -22,6 +22,10 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Painel tem shell próprio — não renderizar header público
+  // (rule-of-hooks: early return depois dos hooks)
+  if (pathname?.startsWith("/painel")) return null;
+
   // na home o header sobrepõe o hero (texto claro); nas outras, fundo claro
   const sobreHero = pathname === "/" && !rolou;
 

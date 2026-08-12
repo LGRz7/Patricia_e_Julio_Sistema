@@ -160,9 +160,38 @@ genérica de corretor. Ver `_memoria/preferencias.md` pra detalhe.
   de Imóveis" + nomes + CRECI (Patrícia Vidal / CRECI 68850 · Júlio
   Aguiar / CRECI 79271). NÃO criar logo de marca — eles não são CNPJ.
 - **Paleta:** sempre tons pastéis (ver `identidade/design-guide.md`).
+- **Tipografia:** títulos em serifada elegante (Playfair Display), corpo
+  em sans-serif (Inter). Kerning apertado nos títulos (-0.035em),
+  aberto nas eyebrows (0.28em UPPERCASE). Ver `identidade/design-guide.md`.
 - Conteúdo e campanhas salvam em `marketing/`.
 - Peças pontuais salvam em `saidas/`.
 - Antes de qualquer peça visual, ler `identidade/design-guide.md`.
+
+### 🎨 Criação de posts pra Instagram — sempre pelo Painel
+
+**Regra prioritária:** posts, carrosséis e stories pra P&J são criados
+no **Estúdio de Criativos** do painel deles, não gerados aqui em HTML
+avulso. Localização: `MazyOS/site/src/app/painel/marketing/estudio`.
+
+O Estúdio já tem:
+- 4 templates React com sistema editorial premium (mesmos padrões da
+  skill `/carrossel`)
+- Paleta oficial + CRECIs pré-preenchidos
+- Modo "Descrever em texto" (parser lê "vista permanente em Icaraí,
+  620 mil" e monta o post)
+- Modo "A partir do catálogo" (puxa foto + dados de um imóvel cadastrado)
+- Export PNG na dimensão certa + histórico automático
+
+**Quando o Yann pedir um post:**
+1. Sugerir abrir o Estúdio (`/painel/marketing/estudio`) e usar um dos
+   dois modos rápidos
+2. Se precisar de formato novo (ex: Antes/Depois), abrir template no
+   Estúdio ao invés de gerar HTML avulso — beneficia sempre
+3. Só cair no fluxo do `/carrossel` aqui quando for legítimamente
+   único e não vale virar template
+
+Ver `MazyOS/.claude/skills/carrossel/SKILL.md` (topo do arquivo) pra
+detalhes técnicos dos templates disponíveis.
 
 ## Ferramentas conectadas
 

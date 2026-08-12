@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
-import { getImovel, imoveis } from "@/data/imoveis";
+import { getImovelMerged, getImoveisMerged } from "@/lib/painel/imoveis-store.server";
 import { getProfissional } from "@/data/profissionais";
 import { Galeria } from "@/components/imovel/Galeria";
 import { FichaTecnica } from "@/components/imovel/FichaTecnica";
@@ -10,16 +10,21 @@ import { CardImovel } from "@/components/imovel/CardImovel";
 import { formatarValor } from "@/lib/format";
 import { linkWhatsapp, mensagemInteresseImovel } from "@/lib/whatsapp";
 
-export function generateStaticParams() {
-  return imoveis.map((i) => ({ slug: i.slug }));
+// Revalida a cada 30s (imóveis novos aparecem quase na hora)
+export const revalidate = 30;
+
+// Pré-renderiza os slugs conhecidos no build; novos são gerados on-demand
+export async function generateStaticParams() {
+  const list = await getImoveisMerged();
+  return list.map((i) => ({ slug: i.slug }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { slug: string };
-}): Metadata {
-  const imovel = getImovel(params.slug);
+}): Promise<Metadata> {
+  const imovel = await getImovelMerged(params.slug);
   if (!imovel) return { title: "Imóvel não encontrado" };
   return {
     title: imovel.titulo,
@@ -32,8 +37,8 @@ export function generateMetadata({
   };
 }
 
-export default function ImovelPage({ params }: { params: { slug: string } }) {
-  const imovel = getImovel(params.slug);
+export default async function ImovelPage({ params }: { params: { slug: string } }) {
+  const imovel = await getImovelMerged(params.slug);
   if (!imovel) notFound();
 
   const responsavel = getProfissional(imovel.responsavel);
@@ -41,7 +46,8 @@ export default function ImovelPage({ params }: { params: { slug: string } }) {
     numero: responsavel?.whatsapp,
     mensagem: mensagemInteresseImovel(imovel.titulo),
   });
-  const relacionados = imoveis.filter((i) => i.slug !== imovel.slug).slice(0, 2);
+  const todos = await getImoveisMerged();
+  const relacionados = todos.filter((i) => i.slug !== imovel.slug).slice(0, 2);
 
   return (
     <article className="pt-28 md:pt-36">
@@ -127,7 +133,6 @@ export default function ImovelPage({ params }: { params: { slug: string } }) {
           )}
         </div>
 
-        {/* coluna de contato (sticky) */}
         <aside className="md:sticky md:top-28 md:self-start">
           <div className="rounded-2xl border border-navy/15 p-7">
             <p className="text-fluid-sm uppercase tracking-wide text-navy/40">

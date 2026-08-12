@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Apresentação do Projeto — Patrícia e Júlio Corretores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#2F4156;--teal:#567C8D;--sky:#C8D9E6;--beige:#F5EFEB;--ink:#1B2530;--white:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--ink);color:var(--beige);line-height:1.65;}
+.page{max-width:900px;margin:0 auto;padding:80px 48px;page-break-after:always;}
+@media print{.page{padding:50px 36px;}}
+
+/* header */
+.header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(245,236,235,0.12);padding-bottom:18px;margin-bottom:56px;}
+.logo{font-family:'Manrope';font-weight:800;font-size:18px;letter-spacing:-0.01em;}
+.logo span{opacity:.5;}
+.partner{font-size:13px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:var(--sky);}
+
+/* títulos */
+.section-tag{font-size:13px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--teal);margin-bottom:14px;}
+h1{font-family:'Manrope';font-weight:800;font-size:52px;letter-spacing:-0.04em;line-height:1.0;margin-bottom:20px;}
+h1 em{font-style:normal;color:var(--teal);}
+h2{font-family:'Manrope';font-weight:800;font-size:36px;letter-spacing:-0.03em;line-height:1.1;margin-bottom:14px;}
+h3{font-family:'Manrope';font-weight:700;font-size:20px;letter-spacing:-0.01em;margin-bottom:8px;}
+p{font-size:16px;max-width:60ch;color:rgba(245,236,235,0.75);}
+p.lead{font-size:18px;max-width:54ch;margin-bottom:36px;}
+
+/* cards */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:32px 0;}
+.card{background:rgba(245,236,235,0.04);border:1px solid rgba(245,236,235,0.08);border-radius:16px;padding:28px 24px;}
+.card .num{font-family:'Manrope';font-weight:800;font-size:42px;color:var(--teal);line-height:1;margin-bottom:10px;}
+.card h3{margin-bottom:8px;}
+.card p{font-size:14px;color:rgba(245,236,235,0.6);}
+.card-wide{grid-column:1/-1;}
+
+/* pilares */
+.pillar{background:rgba(245,236,235,0.04);border:1px solid rgba(245,236,235,0.08);border-radius:16px;padding:32px 28px;margin-bottom:16px;display:flex;gap:24px;align-items:flex-start;}
+.pillar-icon{width:48px;height:48px;border-radius:12px;background:var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;}
+.pillar-tag{font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--teal);margin-bottom:4px;}
+.pillar ul{padding-left:18px;margin-top:10px;}
+.pillar li{font-size:14px;color:rgba(245,236,235,0.65);margin-bottom:6px;}
+
+/* links */
+.link-row{display:block;background:rgba(245,236,235,0.06);border:1px solid rgba(245,236,235,0.1);border-radius:12px;padding:18px 22px;margin-bottom:10px;text-decoration:none;color:var(--beige);transition:background .2s;}
+.link-row:hover{background:rgba(245,236,235,0.1);}
+.link-row strong{font-size:15px;font-weight:600;}
+.link-row span{display:block;font-size:13px;color:var(--teal);margin-top:2px;}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:28px 0;}
+.step{text-align:center;background:rgba(245,236,235,0.04);border:1px solid rgba(245,236,235,0.08);border-radius:16px;padding:28px 20px;}
+.step .num{font-family:'Manrope';font-weight:800;font-size:40px;color:var(--teal);margin-bottom:6px;}
+.step h3{font-size:16px;margin-bottom:6px;}
+.step p{font-size:13px;margin:0 auto;text-align:center;}
+
+/* footer */
+.footer-line{border-top:1px solid rgba(245,236,235,0.1);margin-top:48px;padding-top:20px;font-size:13px;color:rgba(245,236,235,0.4);text-align:center;}
+
+/* page meta */
+.page-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;border-top:1px solid rgba(245,236,235,0.12);margin-top:64px;padding-top:20px;}
+.page-meta dt{font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(245,236,235,0.4);}
+.page-meta dd{font-size:16px;font-weight:600;margin-top:4px;}
+
+/* cta box */
+.cta-box{border:2px dashed rgba(86,124,141,0.5);border-radius:16px;padding:36px;text-align:center;margin-top:36px;}
+.cta-box h2{font-size:28px;margin-bottom:8px;}
+.cta-box p{margin:0 auto;color:rgba(245,236,235,0.6);}
+
+/* palette */
+.palette{display:flex;gap:4px;margin:16px 0;border-radius:12px;overflow:hidden;}
+.palette div{flex:1;height:44px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;}
+
+@media(max-width:700px){
+  .cards,.steps{grid-template-columns:1fr;}
+  h1{font-size:36px;}
+  .page{padding:40px 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- PÁGINA 1 — CAPA -->
+<div class="page">
+  <div class="header">
+    <div class="logo">Patrícia e Júlio<span>*</span></div>
+    <div class="partner">Projeto por Yann</div>
+  </div>
+
+  <div style="margin-top:80px;">
+    <div class="section-tag">Apresentação do Projeto</div>
+    <h1>Posicionamento<br/>digital <em>completo</em><br/>para Patrícia e Júlio.</h1>
+    <p class="lead">Site premium, presença nas redes sociais, quiz interativo e conteúdo visual profissional — tudo rodando junto pra gerar confiança e trazer cliente pelo WhatsApp.</p>
+  </div>
+
+  <dl class="page-meta">
+    <div><dt>Apresentado a</dt><dd>Patrícia e Júlio</dd></div>
+    <div><dt>Projeto</dt><dd>Marketing Digital</dd></div>
+    <div><dt>Data</dt><dd>03 · 07 · 2026</dd></div>
+  </dl>
+</div>
+
+<!-- PÁGINA 2 — DIAGNÓSTICO -->
+<div class="page">
+  <div class="header">
+    <div class="logo">Patrícia e Júlio<span>*</span></div>
+    <div class="partner">Projeto por Yann</div>
+  </div>
+
+  <div class="section-tag">01 · Diagnóstico</div>
+  <h2>O que identificamos antes de começar.</h2>
+  <p class="lead">Vocês recebem ~30 leads por semana, mas pouquíssimos viram visita e nenhum convertia no mesmo mês. O posicionamento digital não refletia a qualidade do atendimento de vocês.</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="num">1</div>
+      <h3>Sem site</h3>
+      <p>Nenhuma presença online própria. O cliente não encontra vocês fora do Instagram.</p>
+    </div>
+    <div class="card">
+      <div class="num">2</div>
+      <h3>Postagens amadoras</h3>
+      <p>Imagens e textos genéricos que não diferenciavam dos outros corretores da região.</p>
+    </div>
+    <div class="card">
+      <div class="num">3</div>
+      <h3>Sem funil de conversão</h3>
+      <p>Lead entrava e não tinha um caminho claro até o WhatsApp — a maioria evaporava.</p>
+    </div>
+    <div class="card">
+      <div class="num">4</div>
+      <h3>Sem identidade visual</h3>
+      <p>Sem paleta definida, sem padrão visual, cada post com uma cara diferente.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PÁGINA 3 — O QUE FOI ENTREGUE -->
+<div class="page">
+  <div class="header">
+    <div class="logo">Patrícia e Júlio<span>*</span></div>
+    <div class="partner">Projeto por Yann</div>
+  </div>
+
+  <div class="section-tag">02 · O que foi entregue</div>
+  <h2>Um sistema completo de posicionamento e conversão.</h2>
+  <p class="lead">Cada peça trabalha junto com a outra. O cliente chega, confia e chama no WhatsApp.</p>
+
+  <div class="pillar">
+    <div class="pillar-icon">🌐</div>
+    <div>
+      <div class="pillar-tag">Pilar 1</div>
+      <h3>Site profissional completo</h3>
+      <p>Design editorial premium, responsivo, com animações imersivas (scroll, parallax, gráficos animados). Nada de template genérico.</p>
+      <ul>
+        <li>Hero com foto do imóvel em tela cheia + título monumental</li>
+        <li>Seção "Como trabalhamos" com pin + barra de progresso</li>
+        <li>Apresentação dos dois com foto real + CRECI</li>
+        <li>Jornada animada (linha brilhante com 3 passos)</li>
+        <li>Seção com chave flutuando (efeito exclusivo)</li>
+        <li>FAQ que quebra objeções antes do cliente perguntar</li>
+        <li>Botão de WhatsApp sempre acessível</li>
+        <li>SEO configurado (metadados, sitemap, dados estruturados)</li>
+        <li>Scroll suave estilo site premium de alto padrão</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pillar">
+    <div class="pillar-icon">🎯</div>
+    <div>
+      <div class="pillar-tag">Pilar 2</div>
+      <h3>Quiz interativo — "Encontre seu imóvel"</h3>
+      <p>4 perguntas rápidas que entendem o que o cliente procura e direcionam pro WhatsApp com tudo resumido na mensagem.</p>
+      <ul>
+        <li>Tipo de imóvel, objetivo, região, faixa de preço</li>
+        <li>Transições animadas entre perguntas</li>
+        <li>Tela final: "Encontramos opções pra você" → WhatsApp</li>
+        <li>Mensagem já chega montada com o resumo do quiz</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pillar">
+    <div class="pillar-icon">🔗</div>
+    <div>
+      <div class="pillar-tag">Pilar 3</div>
+      <h3>Página de Links (substitui Linktree)</h3>
+      <p>Link personalizado pra bio do Instagram, na identidade da marca, com ícones flutuando e animação de entrada.</p>
+      <ul>
+        <li>Link pro site, Instagram, catálogo (quando pronto) e WhatsApp</li>
+        <li>Escolha do corretor (Patrícia ou Júlio) direto</li>
+        <li>Design próprio, sem cara de Linktree genérico</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pillar">
+    <div class="pillar-icon">📷</div>
+    <div>
+      <div class="pillar-tag">Pilar 4</div>
+      <h3>Conteúdo visual para Instagram</h3>
+      <p>Carrosséis e posts prontos pra postar, com a identidade e copy que converte.</p>
+      <ul>
+        <li>Carrossel "Até quando pagar o imóvel dos outros?" — 7 slides</li>
+        <li>Post de impacto com foto profissional + copy emocional</li>
+        <li>Legendas prontas com hashtags</li>
+        <li>Sistema de produção centralizado pra gerar novos posts rápido</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pillar">
+    <div class="pillar-icon">🎨</div>
+    <div>
+      <div class="pillar-tag">Pilar 5</div>
+      <h3>Identidade visual definida</h3>
+      <p>Paleta, tipografia e estilo que se mantém em tudo — site, posts, Linktree, comunicação. Tudo coeso e profissional.</p>
+      <div class="palette">
+        <div style="background:#2F4156;color:#F5EFEB;">Navy</div>
+        <div style="background:#567C8D;color:#F5EFEB;">Teal</div>
+        <div style="background:#C8D9E6;color:#2F4156;">Sky</div>
+        <div style="background:#F5EFEB;color:#2F4156;">Beige</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PÁGINA 4 — COMO FUNCIONA -->
+<div class="page">
+  <div class="header">
+    <div class="logo">Patrícia e Júlio<span>*</span></div>
+    <div class="partner">Projeto por Yann</div>
+  </div>
+
+  <div class="section-tag">03 · Como funciona</div>
+  <h2>O caminho do cliente até vocês.</h2>
+  <p class="lead">Do primeiro contato ao WhatsApp — sem formulário complicado, sem espera.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="num">01</div>
+      <h3>Descobre vocês</h3>
+      <p>Pelo Instagram, Google ou link na bio</p>
+    </div>
+    <div class="step">
+      <div class="num">02</div>
+      <h3>Navega o site</h3>
+      <p>Vê imóveis, faz o quiz ou lê o conteúdo</p>
+    </div>
+    <div class="step">
+      <div class="num">03</div>
+      <h3>Chama no WhatsApp</h3>
+      <p>Mensagem pronta, direto pro corretor certo</p>
+    </div>
+  </div>
+
+  <div style="margin-top:48px;">
+    <h3>Para vocês (Patrícia e Júlio):</h3>
+    <ul style="padding-left:20px;margin-top:12px;">
+      <li style="margin-bottom:8px;font-size:15px;color:rgba(245,236,235,0.7);">O site atualiza sozinho a cada mudança no código</li>
+      <li style="margin-bottom:8px;font-size:15px;color:rgba(245,236,235,0.7);">Novos imóveis são adicionados num arquivo central — sem mexer no design</li>
+      <li style="margin-bottom:8px;font-size:15px;color:rgba(245,236,235,0.7);">Conteúdo pro Instagram sai pronto pra postar, com identidade</li>
+      <li style="margin-bottom:8px;font-size:15px;color:rgba(245,236,235,0.7);">O Linktree personalizado substitui qualquer solução genérica</li>
+    </ul>
+  </div>
+</div>
+
+<!-- PÁGINA 5 — LINKS -->
+<div class="page">
+  <div class="header">
+    <div class="logo">Patrícia e Júlio<span>*</span></div>
+    <div class="partner">Projeto por Yann</div>
+  </div>
+
+  <div class="section-tag">04 · Links do projeto</div>
+  <h2>Tudo no ar e funcionando.</h2>
+  <p style="margin-bottom:28px;">Clique pra acessar cada parte do projeto:</p>
+
+  <a class="link-row" href="https://patricia-e-julio-site.vercel.app" target="_blank">
+    <strong>🌐 Site principal</strong>
+    <span>patricia-e-julio-site.vercel.app</span>
+  </a>
+  <a class="link-row" href="https://patricia-e-julio-site.vercel.app/links" target="_blank">
+    <strong>🔗 Página de Links (pra bio do Instagram)</strong>
+    <span>patricia-e-julio-site.vercel.app/links</span>
+  </a>
+  <a class="link-row" href="https://patricia-e-julio-site.vercel.app/quiz" target="_blank">
+    <strong>🎯 Quiz — Encontre seu imóvel</strong>
+    <span>patricia-e-julio-site.vercel.app/quiz</span>
+  </a>
+  <a class="link-row" href="https://patricia-e-julio-site.vercel.app/imoveis" target="_blank">
+    <strong>🏠 Página de Imóveis</strong>
+    <span>patricia-e-julio-site.vercel.app/imoveis</span>
+  </a>
+  <a class="link-row" href="https://www.instagram.com/julio_e_patricia_corretores/" target="_blank">
+    <strong>📷 Instagram</strong>
+    <span>@julio_e_patricia_corretores</span>
+  </a>
+</div>
+
+<!-- PÁGINA 6 — PRÓXIMOS PASSOS -->
+<div class="page">
+  <div class="header">
+    <div class="logo">Patrícia e Júlio<span>*</span></div>
+    <div class="partner">Projeto por Yann</div>
+  </div>
+
+  <div class="section-tag">05 · Próximos passos</div>
+  <h2>O que vem agora.</h2>
+  <p class="lead">O sistema está rodando. As próximas ações amplificam o resultado:</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="num">→</div>
+      <h3>Mais conteúdo pro Instagram</h3>
+      <p>Carrosséis, posts de autoridade, stories — mantendo o feed ativo e profissional.</p>
+    </div>
+    <div class="card">
+      <div class="num">→</div>
+      <h3>SEO local / Google Meu Negócio</h3>
+      <p>Aparecer na busca orgânica quando alguém pesquisa "corretor São Gonçalo".</p>
+    </div>
+    <div class="card">
+      <div class="num">→</div>
+      <h3>Catálogo de imóveis em PDF</h3>
+      <p>Material digital pra mandar no WhatsApp e ativar o botão no Linktree.</p>
+    </div>
+    <div class="card">
+      <div class="num">→</div>
+      <h3>Domínio próprio</h3>
+      <p>patriciaejulio.com.br — dá ainda mais credibilidade (opcional, ~R$40/ano).</p>
+    </div>
+  </div>
+
+  <div class="cta-box">
+    <h2>O posicionamento digital de vocês mudou.</h2>
+    <p>Qualquer dúvida, ajuste ou novo conteúdo — é só me chamar.</p>
+  </div>
+
+  <div class="footer-line">
+    Projeto desenvolvido por Yann · Implementação com IA · Julho 2026
+  </div>
+</div>
+
+</body>
+</html>

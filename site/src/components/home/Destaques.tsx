@@ -5,11 +5,10 @@ import Link from "next/link";
 import { gsap } from "@/lib/gsap";
 import { useGsapLayout } from "@/hooks/useGsapLayout";
 import { CardImovel } from "@/components/imovel/CardImovel";
-import { getImoveisDestaque } from "@/data/imoveis";
+import type { Imovel } from "@/types/imovel";
 
-export function Destaques() {
+export function Destaques({ imoveis }: { imoveis: Imovel[] }) {
   const root = useRef<HTMLElement>(null);
-  const imoveis = getImoveisDestaque();
 
   useGsapLayout(root, (_ctx, reduced) => {
     const itens = gsap.utils.toArray<HTMLElement>("[data-item]");

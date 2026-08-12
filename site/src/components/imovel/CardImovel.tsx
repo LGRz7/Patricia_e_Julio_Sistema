@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function CardImovel({ imovel, indice, formato = "horizontal" }: Props) {
-  const capa = imovel.imagens[0];
+  const capa = imovel.imagens?.[0] ?? { src: "/imoveis/placeholder-fachada.svg", alt: imovel.titulo, orientacao: "horizontal" as const };
   const area = formatarArea(imovel.area);
 
   return (

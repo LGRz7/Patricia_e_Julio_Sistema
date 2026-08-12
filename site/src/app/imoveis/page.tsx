@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CardImovel } from "@/components/imovel/CardImovel";
-import { imoveis } from "@/data/imoveis";
+import { getImoveisMerged } from "@/lib/painel/imoveis-store.server";
 
 export const metadata: Metadata = {
   title: "Imóveis",
@@ -8,7 +8,12 @@ export const metadata: Metadata = {
     "Imóveis disponíveis com Patrícia e Júlio em São Gonçalo e região. Apartamentos e casas para morar ou investir.",
 };
 
-export default function ImoveisPage() {
+// Server Component — puxa do store (base + publicados no painel)
+export const revalidate = 30;
+
+export default async function ImoveisPage() {
+  const imoveis = await getImoveisMerged();
+
   return (
     <div className="editorial pt-32 pb-24 md:pt-44 md:pb-32">
       <header className="mb-16 max-w-3xl">

@@ -13,7 +13,7 @@ export const profissionais: Profissional[] = [
     creci: "CRECI 68850",
     bio: "Atende cada cliente de perto, do primeiro contato à entrega das chaves. Acredita que comprar um imóvel é uma decisão de confiança — e trata cada negociação com esse cuidado.",
     especialidades: ["Imóveis residenciais", "Primeira casa própria", "Atendimento personalizado"],
-    foto: "/equipe/patricia-julio.png", // foto dos dois (em conjunto) — substituir por individuais se houver
+    foto: "/equipe/patriciasozinha.jpg",
     fotoAlt: "Patrícia Vidal, corretora de imóveis",
     whatsapp: "5521991734848",
   },
@@ -24,7 +24,7 @@ export const profissionais: Profissional[] = [
     creci: "CRECI 79271",
     bio: "Acompanha o cliente em cada etapa da compra com clareza e transparência. Foco em entender o que a pessoa realmente procura antes de apresentar qualquer imóvel.",
     especialidades: ["Imóveis residenciais", "Imóveis para investir", "Negociação"],
-    foto: "/equipe/patricia-julio.png", // foto dos dois (em conjunto) — substituir por individuais se houver
+    foto: "/equipe/juliosozinho.jpg",
     fotoAlt: "Júlio Aguiar, corretor de imóveis",
     whatsapp: "5521970706693",
   },
