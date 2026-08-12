@@ -6,6 +6,6 @@
     "build": "cd patricia-julio && npm install && npm run build",
     "dev": "cd patricia-julio && npm run dev",
     "start": "cd patricia-julio && npm start",
-    "install": "cd patricia-julio && npm install && npx playwright install chromium --with-deps"
+    "install": "cd patricia-julio && npm install && npx playwright install chromium"
   }
 }
