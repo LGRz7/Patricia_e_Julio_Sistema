@@ -123,23 +123,38 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
         <div className="lg:hidden fixed inset-0 z-40" onClick={() => setMobileOpen(false)}>
           <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 bottom-0 w-[280px] bg-beige border-r border-sky/60 flex flex-col animate-[slideIn_240ms_cubic-bezier(0.23,1,0.32,1)]"
+            className="absolute left-0 top-0 bottom-0 w-[86%] max-w-[340px] bg-beige border-r border-sky/60 flex flex-col animate-[slideIn_240ms_cubic-bezier(0.23,1,0.32,1)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-5 border-b border-sky/60">
-              <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-full grid place-items-center text-white font-display font-bold text-sm" style={{ background: "linear-gradient(135deg, #2F4156, #567C8D)" }}>PJ</span>
-                <div>
-                  <div className="font-display font-bold text-[14px]">Painel dos Corretores</div>
-                  <div className="text-[10.5px] text-teal">Patrícia & Júlio</div>
+            <div className="flex items-center justify-between px-5 py-5 border-b border-sky/60">
+              <Link
+                href="/painel"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 flex-1 min-w-0"
+              >
+                <span
+                  className="w-12 h-12 rounded-2xl grid place-items-center text-white font-display font-bold text-[17px] shadow-[0_10px_20px_-6px_rgba(47,65,86,0.4)] flex-shrink-0"
+                  style={{ background: "linear-gradient(135deg, #2F4156, #567C8D)" }}
+                >
+                  PJ
+                </span>
+                <div className="min-w-0">
+                  <div className="font-display font-bold text-navy text-[16px] leading-tight truncate">Painel dos Corretores</div>
+                  <div className="text-[12px] text-teal font-medium mt-0.5 truncate">Patrícia &amp; Júlio</div>
                 </div>
-              </div>
-              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 grid place-items-center rounded-full text-navy/70">
-                <X size={16} />
+              </Link>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="w-9 h-9 grid place-items-center rounded-full text-navy/70 hover:bg-sky/40 transition-colors flex-shrink-0"
+                aria-label="Fechar menu"
+              >
+                <X size={18} />
               </button>
             </div>
-            <NavList items={NAV} active={activeIndex} onNav={() => setMobileOpen(false)} />
-            <UsuarioBadge usuario={usuario} iniciais={iniciais} onSair={sair} />
+            <NavList items={NAV} active={activeIndex} onNav={() => setMobileOpen(false)} size="lg" />
+            <div className="p-4 border-t border-sky/60">
+              <UsuarioBadge usuario={usuario} iniciais={iniciais} onSair={sair} size="lg" />
+            </div>
           </aside>
           <style>{`@keyframes slideIn { from { transform: translateX(-100%) } to { transform: translateX(0) } }`}</style>
         </div>
@@ -179,9 +194,20 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function NavList({ items, active, onNav }: { items: NavItem[]; active: number; onNav?: () => void }) {
+function NavList({
+  items,
+  active,
+  onNav,
+  size = "sm",
+}: {
+  items: NavItem[]
+  active: number
+  onNav?: () => void
+  size?: "sm" | "lg"
+}) {
+  const isLg = size === "lg"
   return (
-    <nav className="p-3 flex flex-col gap-1 flex-1 overflow-y-auto">
+    <nav className={`flex flex-col flex-1 overflow-y-auto ${isLg ? "p-4 gap-1.5" : "p-3 gap-1"}`}>
       {items.map((item, i) => {
         const Icon = item.icon
         const isActive = i === active
@@ -190,14 +216,16 @@ function NavList({ items, active, onNav }: { items: NavItem[]; active: number; o
             key={item.href}
             href={item.href}
             onClick={onNav}
-            className="relative flex items-center gap-3 px-4 py-3 rounded-2xl text-[13.5px] font-medium transition-colors duration-300"
+            className={`relative flex items-center rounded-2xl font-medium transition-colors duration-300 ${
+              isLg ? "gap-4 px-4 py-3.5 text-[15.5px]" : "gap-3 px-4 py-3 text-[13.5px]"
+            }`}
             style={{
               background: isActive ? "linear-gradient(135deg, #2F4156, #567C8D)" : "transparent",
               color: isActive ? "#F5EFEB" : "#2F4156",
               boxShadow: isActive ? "0 10px 22px -6px rgba(47,65,86,0.35)" : "none",
             }}
           >
-            <Icon size={17} strokeWidth={isActive ? 2.2 : 1.9} className="flex-shrink-0" />
+            <Icon size={isLg ? 20 : 17} strokeWidth={isActive ? 2.2 : 1.9} className="flex-shrink-0" />
             <span>{item.label}</span>
           </Link>
         )
@@ -207,35 +235,50 @@ function NavList({ items, active, onNav }: { items: NavItem[]; active: number; o
 }
 
 function UsuarioBadge({
-  usuario, iniciais, onSair,
+  usuario, iniciais, onSair, size = "sm",
 }: {
   usuario: ReturnType<typeof useUsuario>["usuario"]
   iniciais: string
   onSair: () => Promise<void>
+  size?: "sm" | "lg"
 }) {
   if (!usuario) return null
+  const isLg = size === "lg"
   return (
-    <div className="mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-2xl bg-white/60 border border-sky/60">
+    <div className={`flex items-center rounded-2xl bg-white/60 border border-sky/60 ${
+      isLg ? "mt-0 gap-3.5 px-4 py-3.5" : "mt-2 gap-2.5 px-3 py-2.5"
+    }`}>
       <Link
         href="/painel/perfil"
-        className="flex items-center gap-2.5 flex-1 min-w-0 group"
+        className={`flex items-center flex-1 min-w-0 group ${isLg ? "gap-3.5" : "gap-2.5"}`}
         title="Ver meu perfil"
       >
         <div
-          className="w-8 h-8 rounded-full grid place-items-center text-white font-bold text-xs group-hover:scale-105 transition-transform"
+          className={`rounded-full grid place-items-center text-white font-bold group-hover:scale-105 transition-transform flex-shrink-0 ${
+            isLg ? "w-12 h-12 text-[16px]" : "w-8 h-8 text-xs"
+          }`}
           style={{ background: usuario.papel === "julio" ? "#567C8D" : "#2F4156" }}
         >
           {iniciais}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[12px] font-bold text-navy truncate group-hover:text-teal transition-colors">{usuario.nome}</div>
-          <div className="text-[10px] text-teal flex items-center gap-1">
-            <UserCog size={9} /> Ver perfil
+          <div className={`font-bold text-navy truncate group-hover:text-teal transition-colors ${isLg ? "text-[16px] leading-tight" : "text-[12px]"}`}>
+            {usuario.nome}
+          </div>
+          <div className={`text-teal flex items-center gap-1 ${isLg ? "text-[12.5px] mt-1" : "text-[10px]"}`}>
+            <UserCog size={isLg ? 13 : 9} /> Ver perfil
           </div>
         </div>
       </Link>
-      <button onClick={onSair} className="w-7 h-7 grid place-items-center text-navy/60 hover:text-navy rounded-lg hover:bg-sky/40 transition-colors" title="Sair">
-        <LogOut size={13} />
+      <button
+        onClick={onSair}
+        className={`grid place-items-center text-navy/60 hover:text-navy rounded-xl hover:bg-sky/40 transition-colors flex-shrink-0 ${
+          isLg ? "w-11 h-11" : "w-7 h-7"
+        }`}
+        title="Sair"
+        aria-label="Sair"
+      >
+        <LogOut size={isLg ? 19 : 13} />
       </button>
     </div>
   )
