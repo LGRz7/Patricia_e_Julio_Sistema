@@ -144,8 +144,8 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
       <section className="rounded-3xl border border-sky/60 bg-white p-5 lg:p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-teal">Passo 2 de 3</div>
-            <h2 className="mt-1 font-display text-[18px] font-bold text-navy leading-tight">Adicione as amostras</h2>
+            <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-teal">Passo 2 de 3 · v2</div>
+            <h2 className="mt-1 font-display text-[18px] font-bold text-navy leading-tight">Escolha 4 anúncios pra comparar</h2>
             <p className="text-[12px] text-teal mt-1">
               Ideal 4 amostras semelhantes. Use os 4 atalhos abaixo pra abrir o ZAP filtrado, copie o texto do anúncio e cole no card — o painel extrai preço, área, quartos e o resto automaticamente.
             </p>
