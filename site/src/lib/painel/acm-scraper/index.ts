@@ -28,18 +28,16 @@ export interface ScraperResultado {
 }
 
 /**
- * Vercel serverless não tem Chromium disponível fora da rota que configura
- * `@sparticuz/chromium` explicitamente. Tentar Playwright lá causa hang de 5-30s
- * enquanto o launch procura um binário que não existe — melhor pular na hora.
+ * Playwright habilitado por padrão em qualquer ambiente — o `zap-playwright.ts`
+ * é dual-mode: usa `@sparticuz/chromium` na Vercel e full Playwright localmente.
  *
- * Local (`npm run dev`) e Vercel Pro com o binário wired-up podem forçar via
- * `PLAYWRIGHT_ACM=1`.
+ * Se algo quebrar em produção (ex: sparticuz sobe o Chromium mas o ZAP muda
+ * fingerprinting e bloqueia), pode desligar rapidamente via `PLAYWRIGHT_ACM=0`
+ * no dashboard da Vercel.
  */
 function playwrightHabilitado(): boolean {
   if (process.env.PLAYWRIGHT_ACM === "0") return false
-  if (process.env.PLAYWRIGHT_ACM === "1") return true
-  // Default: só tenta fora do Vercel (dev local, VPS próprio, etc.)
-  return !process.env.VERCEL
+  return true
 }
 
 /** Timeout global do playwright pra não travar o serverless. */
@@ -53,8 +51,9 @@ async function tentarPlaywright(input: BuscaComparaveisInput): Promise<ScraperRe
     const mod = await import("./zap-playwright").catch(() => null)
     if (!mod?.buscarComparaveisZapPlaywright) return null
 
-    // Corta em 22s: acima disso, Vercel free/pro estoura mesmo com maxDuration 30
-    const HARD_TIMEOUT = 22000
+    // Corta em 28s: cold start do sparticuz + navegação + intercept da Glue API
+    // costuma ficar em 10-18s. Acima de 28s a lambda do Vercel já estourou.
+    const HARD_TIMEOUT = 28000
     const run = mod.buscarComparaveisZapPlaywright(input)
     const timeout = new Promise<ScraperResultado>((_, rej) =>
       setTimeout(() => rej(new Error(`playwright timeout ${HARD_TIMEOUT}ms`)), HARD_TIMEOUT),

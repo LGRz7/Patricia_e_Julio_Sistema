@@ -16,25 +16,65 @@
  * 5 min de inatividade. Custa uns 200 MB residentes enquanto vivo.
  */
 import "server-only"
-import type { Browser, BrowserContext } from "playwright"
+import type { Browser, BrowserContext } from "playwright-core"
 import { coordenadasDeBairro, normalizarBairro } from "./geolocalizacao"
 import type { BuscaComparaveisInput, ComparavelZap } from "./zap"
 
-// Usa playwright-extra + stealth plugin pra parecer browser real.
-// O stealth patcheia ~20 pontos de detecção (navigator.webdriver, chrome runtime,
-// iframe.contentWindow, plugins, permissions, WebGL vendor, etc).
-// Se o plugin falhar em carregar, cai pra playwright default.
-async function chromiumComStealth() {
+const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
+
+/**
+ * Chromium dual-mode:
+ *  - Serverless (Vercel) → `playwright-core` + `@sparticuz/chromium` (~50MB slim otimizado pro Lambda).
+ *    Não usa stealth porque playwright-extra depende do full playwright (não roda no bundle da Vercel).
+ *  - Dev local / VPS      → `playwright-extra` + stealth plugin (patcheia ~20 pontos de detecção).
+ *
+ * Sem esse dual-mode, o launch trava sem browser instalado.
+ */
+async function launchChromium(): Promise<Browser> {
+  if (isServerless) {
+    const [{ chromium: pwCore }, sparticuzModule] = await Promise.all([
+      import("playwright-core"),
+      import("@sparticuz/chromium"),
+    ])
+    const sparticuz = (sparticuzModule as { default?: typeof sparticuzModule }).default ?? sparticuzModule
+    // @ts-expect-error — sparticuz tem tipos frouxos entre versões
+    const executablePath = await sparticuz.executablePath()
+    return pwCore.launch({
+      // @ts-expect-error — args do sparticuz
+      args: sparticuz.args,
+      executablePath,
+      headless: true,
+    })
+  }
+
+  // Ambiente local: full playwright + stealth
   try {
     const { chromium } = await import("playwright-extra") as any
     const stealthMod = await import("puppeteer-extra-plugin-stealth") as any
     const stealth = (stealthMod.default || stealthMod)()
     chromium.use(stealth)
-    return chromium
+    const launchOpts = {
+      headless: true,
+      args: [
+        "--disable-blink-features=AutomationControlled",
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-features=IsolateOrigins,site-per-process",
+      ],
+    }
+    try {
+      const browser = await chromium.launch({ ...launchOpts, channel: "chrome" })
+      console.log("[zap-playwright] local Chrome do sistema + stealth")
+      return browser
+    } catch {
+      const browser = await chromium.launch(launchOpts)
+      console.log("[zap-playwright] local Chromium bundled + stealth")
+      return browser
+    }
   } catch (e) {
-    console.warn("[zap-playwright] stealth indisponível, usando playwright puro:", (e as Error).message)
-    const { chromium } = await import("playwright")
-    return chromium
+    console.warn("[zap-playwright] stealth indisponível, usando playwright-core puro:", (e as Error).message)
+    const { chromium: pwCore } = await import("playwright-core")
+    return pwCore.launch({ headless: true })
   }
 }
 
@@ -49,7 +89,9 @@ interface BrowserPool {
 }
 
 let pool: BrowserPool | null = null
-const IDLE_MS = 5 * 60 * 1000 // 5 min
+// Em serverless, o "singleton" só serve enquanto a lambda está warm — o
+// container é destruído após ~15 min de inatividade de qualquer jeito.
+const IDLE_MS = isServerless ? 90 * 1000 : 5 * 60 * 1000
 
 async function getContext(): Promise<BrowserContext> {
   if (pool && pool.browser.isConnected()) {
@@ -57,29 +99,7 @@ async function getContext(): Promise<BrowserContext> {
     return pool.context
   }
 
-  const chromium = await chromiumComStealth()
-
-  const launchOpts = {
-    headless: true,
-    args: [
-      "--disable-blink-features=AutomationControlled",
-      "--no-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-features=IsolateOrigins,site-per-process",
-    ],
-  }
-
-  // Tenta primeiro com Chrome instalado no sistema (channel:'chrome'); se não
-  // tiver, cai pro Chromium bundled do Playwright. Chrome real bypassa mais
-  // detecções que o headless-shell.
-  let browser: Browser
-  try {
-    browser = await chromium.launch({ ...launchOpts, channel: "chrome" })
-    console.log("[zap-playwright] usando Chrome do sistema")
-  } catch {
-    browser = await chromium.launch(launchOpts)
-    console.log("[zap-playwright] usando Chromium bundled")
-  }
+  const browser = await launchChromium()
   const context = await browser.newContext({
     userAgent:
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",

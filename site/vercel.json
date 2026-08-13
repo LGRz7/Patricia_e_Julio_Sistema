@@ -3,6 +3,10 @@
     "src/app/api/marketing/gerar/route.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "src/app/api/acm/buscar-comparaveis/route.ts": {
+      "maxDuration": 40,
+      "memory": 1024
     }
   },
   "installCommand": "npm install"

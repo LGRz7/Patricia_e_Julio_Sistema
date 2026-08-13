@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import {
   Plus, ClipboardPaste, Wand2, X, MapPin, Trash2, ChevronDown, ChevronUp,
   Home, TrendingUp, AlertCircle, Sparkles, Info, Radar, Loader2, ExternalLink,
@@ -37,6 +37,7 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
   const [buscaMeta, setBuscaMeta] = useState<BuscaComparaveisMeta | null>(null)
   const [buscaErro, setBuscaErro] = useState<string | null>(null)
   const [urlsAssistidas, setUrlsAssistidas] = useState<UrlAssistida[]>([])
+  const assistidoRef = useRef<HTMLDivElement | null>(null)
 
   // Preview em tempo real do cálculo (só quando dá pra calcular)
   const preview = useMemo(() => {
@@ -97,6 +98,13 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
       )
     } finally {
       setBuscando(false)
+      // Se a busca automática não trouxe amostras, rola até a seção "modo assistido"
+      // pra o corretor ver os 4 atalhos sem precisar procurar na página.
+      requestAnimationFrame(() => {
+        if (assistidoRef.current && amostras.length === 0) {
+          assistidoRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      })
     }
   }
 
@@ -229,7 +237,8 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
       {/* Modo ASSISTIDO — 4 atalhos pré-filtrados no ZAP */}
       {urlsAssistidas.length > 0 && (
         <section
-          className="rounded-3xl border-2 bg-white p-5 lg:p-6 space-y-4"
+          ref={assistidoRef}
+          className="rounded-3xl border-2 bg-white p-5 lg:p-6 space-y-4 scroll-mt-24"
           style={{ borderColor: "rgba(86,124,141,0.35)" }}
         >
           <div className="flex items-start justify-between gap-3 flex-wrap">
