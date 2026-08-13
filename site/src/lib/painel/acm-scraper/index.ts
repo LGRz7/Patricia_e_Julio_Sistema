@@ -40,16 +40,27 @@ function playwrightHabilitado(): boolean {
   return true
 }
 
-/** Timeout global do playwright pra não travar o serverless. */
-async function tentarPlaywright(input: BuscaComparaveisInput): Promise<ScraperResultado | null> {
+/**
+ * Timeout global do playwright pra não travar o serverless.
+ * Retorna `{ erro }` em caso de falha (em vez de null) pra o caller poder
+ * bolhar o motivo pro frontend.
+ */
+async function tentarPlaywright(
+  input: BuscaComparaveisInput,
+): Promise<ScraperResultado | { erroPlaywright: string } | null> {
   if (!playwrightHabilitado()) {
-    console.info("[scraper] Playwright pulado (Vercel serverless).")
+    console.info("[scraper] Playwright pulado (PLAYWRIGHT_ACM=0)")
     return null
   }
   try {
     // Import dinâmico pra não quebrar build em ambiente sem playwright instalado
-    const mod = await import("./zap-playwright").catch(() => null)
-    if (!mod?.buscarComparaveisZapPlaywright) return null
+    const mod = await import("./zap-playwright").catch((e) => {
+      console.warn("[scraper] import zap-playwright falhou:", (e as Error).message)
+      return null
+    })
+    if (!mod?.buscarComparaveisZapPlaywright) {
+      return { erroPlaywright: "modulo zap-playwright indisponivel" }
+    }
 
     // Corta em 28s: cold start do sparticuz + navegação + intercept da Glue API
     // costuma ficar em 10-18s. Acima de 28s a lambda do Vercel já estourou.
@@ -61,9 +72,14 @@ async function tentarPlaywright(input: BuscaComparaveisInput): Promise<ScraperRe
     const r = await Promise.race([run, timeout])
     return { ...r, modo: "playwright" }
   } catch (e) {
-    console.warn("[scraper] Playwright falhou:", (e as Error).message)
-    return null
+    const msg = (e as Error).message
+    console.warn("[scraper] Playwright erro:", msg)
+    return { erroPlaywright: msg }
   }
+}
+
+function isPlaywrightErro(x: unknown): x is { erroPlaywright: string } {
+  return !!x && typeof x === "object" && "erroPlaywright" in (x as Record<string, unknown>)
 }
 
 export async function buscarComparaveis(input: BuscaComparaveisInput): Promise<ScraperResultado> {
@@ -75,10 +91,15 @@ export async function buscarComparaveis(input: BuscaComparaveisInput): Promise<S
   }
   const urlsAssistidas = gerarUrlsAssistidasZap(assistedInput)
 
-  // 1) Playwright (só fora do Vercel — no serverless o binário não está disponível)
+  // 1) Playwright (usa sparticuz Chromium no Vercel, playwright-extra localmente)
   const viaPlaywright = await tentarPlaywright(input)
-  if (viaPlaywright && viaPlaywright.comparaveis.length > 0) {
+  let erroPlaywright: string | undefined
+  if (isPlaywrightErro(viaPlaywright)) {
+    erroPlaywright = viaPlaywright.erroPlaywright
+  } else if (viaPlaywright && viaPlaywright.comparaveis.length > 0) {
     return { ...viaPlaywright, urlsAssistidas }
+  } else if (viaPlaywright) {
+    erroPlaywright = viaPlaywright.erro
   }
 
   // 2) HTTP direto — rápido, mas pode ser 403 pelo Cloudflare do ZAP
@@ -88,11 +109,14 @@ export async function buscarComparaveis(input: BuscaComparaveisInput): Promise<S
   }
 
   // 3) Assisted — sem comparáveis auto, MAS sempre com as 4 URLs prontas
-  //    (o corretor abre no ZAP, escolhe, cola o texto — parser cuida)
-  const erroFinal =
-    viaPlaywright?.erro ||
-    viaHttp.erro ||
-    "Busca automática indisponível no momento."
+  const partes = [
+    erroPlaywright ? `playwright: ${erroPlaywright}` : null,
+    viaHttp.erro ? `http: ${viaHttp.erro}` : null,
+  ].filter(Boolean)
+  const erroFinal = partes.length
+    ? partes.join(" · ")
+    : "Busca automática indisponível no momento."
+
   return {
     comparaveis: [],
     totalDisponivel: viaHttp.totalDisponivel ?? 0,

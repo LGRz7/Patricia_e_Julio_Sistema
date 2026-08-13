@@ -32,6 +32,7 @@ const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NA
  */
 async function launchChromium(): Promise<Browser> {
   if (isServerless) {
+    console.log("[zap-playwright] modo serverless — subindo sparticuz Chromium")
     const [{ chromium: pwCore }, sparticuzModule] = await Promise.all([
       import("playwright-core"),
       import("@sparticuz/chromium"),
@@ -39,6 +40,10 @@ async function launchChromium(): Promise<Browser> {
     const sparticuz = (sparticuzModule as { default?: typeof sparticuzModule }).default ?? sparticuzModule
     // @ts-expect-error — sparticuz tem tipos frouxos entre versões
     const executablePath = await sparticuz.executablePath()
+    if (!executablePath) {
+      throw new Error("sparticuz executablePath vazio (binário não copiado pra lambda?)")
+    }
+    console.log("[zap-playwright] executablePath:", executablePath)
     return pwCore.launch({
       // @ts-expect-error — args do sparticuz
       args: sparticuz.args,
