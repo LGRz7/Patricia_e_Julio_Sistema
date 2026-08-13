@@ -31,9 +31,6 @@ const nextConfig = {
       "/api/marketing/gerar": [
         "./node_modules/@sparticuz/chromium/bin/**",
       ],
-      "/api/acm/buscar-comparaveis": [
-        "./node_modules/@sparticuz/chromium/bin/**",
-      ],
     },
   },
 };

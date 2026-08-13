@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   Plus, ClipboardPaste, Wand2, X, MapPin, Trash2, ChevronDown, ChevronUp,
   Home, TrendingUp, AlertCircle, Sparkles, Info, Radar, Loader2, ExternalLink,
@@ -36,8 +36,7 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
   const [buscando, setBuscando] = useState(false)
   const [buscaMeta, setBuscaMeta] = useState<BuscaComparaveisMeta | null>(null)
   const [buscaErro, setBuscaErro] = useState<string | null>(null)
-  const [urlsAssistidas, setUrlsAssistidas] = useState<UrlAssistida[]>([])
-  const assistidoRef = useRef<HTMLDivElement | null>(null)
+  const [autoTentado, setAutoTentado] = useState(false)
 
   // Preview em tempo real do cálculo (só quando dá pra calcular)
   const preview = useMemo(() => {
@@ -46,14 +45,26 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
     return computeSugestao(alvo, validas)
   }, [alvo, amostras])
 
+  // URLs assistidas — SEMPRE calculadas client-side a partir do alvo.
+  // Não depende da API, não trava, aparece na hora que o corretor chega no Passo 2.
+  const urlsAssistidas = useMemo<UrlAssistida[]>(() => {
+    if (!alvo.cidade || !alvo.bairro || alvo.areaTotal <= 0) return []
+    return gerarUrlsAssistidasFallback({
+      cidade: alvo.cidade,
+      bairro: alvo.bairro,
+      areaAlvo: alvo.areaTotal,
+      quartos: alvo.quartos || undefined,
+    })
+  }, [alvo.cidade, alvo.bairro, alvo.areaTotal, alvo.quartos])
+
   async function buscarAutomatico() {
     if (buscando) return
     setBuscando(true)
     setBuscaErro(null)
     setBuscaMeta(null)
-    setUrlsAssistidas([])
+    setAutoTentado(true)
     try {
-      const { amostras: sugeridas, urlsAssistidas: urls, meta } = await apiBuscarComparaveis({
+      const { amostras: sugeridas, meta } = await apiBuscarComparaveis({
         apelido: alvo.apelido,
         cidade: alvo.cidade,
         bairro: alvo.bairro,
@@ -65,46 +76,25 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
         iptu: alvo.iptu,
       }, 6)
       setBuscaMeta(meta)
-      setUrlsAssistidas(urls)
 
       if (sugeridas.length === 0) {
-        // Modo assistido: mostra as URLs pra o corretor abrir e colar depois
         setBuscaErro(
-          meta.erro
-            ? `Busca automática bloqueada pelo ZAP (${meta.erro}). Use os 4 atalhos abaixo — abrem o ZAP filtrado, você escolhe e cola o texto.`
-            : "Sem resultados na busca automática. Use os 4 atalhos abaixo pra procurar no ZAP e colar o texto no card da amostra."
+          "A busca automática não trouxe resultados dessa vez. Sem stress — use os atalhos do ZAP acima pra abrir a busca filtrada e colar o texto do anúncio.",
         )
         return
       }
 
-      // Substitui a lista de amostras pelas sugeridas
       onChange(sugeridas.map((s) => {
         const { _similaridade: _sim, ...clean } = s as AmostraACM & { _similaridade?: number }
         void _sim
         return clean
       }))
     } catch (e) {
-      // Erro de rede / 500 / timeout de fetch — mesmo assim gera os atalhos locais
-      // pra o corretor não ficar preso. `gerarUrlsAssistidasFallback` roda no browser.
-      const urlsFallback = gerarUrlsAssistidasFallback({
-        cidade: alvo.cidade,
-        bairro: alvo.bairro,
-        areaAlvo: alvo.areaTotal,
-        quartos: alvo.quartos || undefined,
-      })
-      setUrlsAssistidas(urlsFallback)
       setBuscaErro(
-        `Não deu pra buscar automaticamente (${(e as Error).message}). Use os 4 atalhos abaixo pra procurar no ZAP.`,
+        `Busca automática indisponível (${(e as Error).message}). Use os atalhos do ZAP acima.`,
       )
     } finally {
       setBuscando(false)
-      // Se a busca automática não trouxe amostras, rola até a seção "modo assistido"
-      // pra o corretor ver os 4 atalhos sem precisar procurar na página.
-      requestAnimationFrame(() => {
-        if (assistidoRef.current && amostras.length === 0) {
-          assistidoRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-        }
-      })
     }
   }
 
@@ -157,7 +147,7 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
             <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-teal">Passo 2 de 3</div>
             <h2 className="mt-1 font-display text-[18px] font-bold text-navy leading-tight">Adicione as amostras</h2>
             <p className="text-[12px] text-teal mt-1">
-              Ideal 4 amostras semelhantes. Deixa o painel buscar por você — ou cola texto / preenche manual como fallback.
+              Ideal 4 amostras semelhantes. Use os 4 atalhos abaixo pra abrir o ZAP filtrado, copie o texto do anúncio e cole no card — o painel extrai preço, área, quartos e o resto automaticamente.
             </p>
           </div>
           {preview && preview.valorSugerido > 0 && (
@@ -176,116 +166,105 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
         </div>
       </section>
 
-      {/* BUSCA AUTOMÁTICA — CTA principal */}
-      <section
-        className="rounded-3xl p-5 lg:p-6 text-beige relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #2F4156 0%, #567C8D 100%)" }}
-      >
-        <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-[240px]">
-            <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-beige/70">
-              <Radar size={12} strokeWidth={2.2} />
-              Busca automática
-            </div>
-            <h3 className="mt-1 font-display text-[16px] lg:text-[18px] font-bold leading-tight">
-              Deixa o painel achar {alvo.bairro || "no bairro"} pra você
-            </h3>
-            <p className="mt-1.5 text-[11.5px] text-beige/80 leading-relaxed max-w-md">
-              Busca no ZAP Imóveis com filtros do seu alvo (área ±25%, quartos), ranqueia por similaridade e traz as 6 melhores. Você revisa e ajusta.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={buscarAutomatico}
-            disabled={buscando}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-beige text-navy text-[12.5px] font-bold hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {buscando ? <Loader2 size={14} className="animate-spin" /> : <Radar size={14} strokeWidth={2.2} />}
-            {buscando ? "Buscando no ZAP..." : (amostras.length > 0 ? "Buscar outras amostras" : "Buscar amostras agora")}
-          </button>
-        </div>
-
-        {buscaMeta && (
-          <div className="mt-4 relative z-10 flex flex-wrap gap-2">
-            <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-white/15 border border-white/20">
-              {buscaMeta.totalDisponivel.toLocaleString("pt-BR")} anúncios na região
-            </span>
-            <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-white/15 border border-white/20">
-              {buscaMeta.candidatosRankeados} rankeados por similaridade
-            </span>
-            {buscaMeta.ampliouParaCidade && (
-              <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-white/15 border border-white/20">
-                Ampliei pra cidade (poucos no bairro)
-              </span>
-            )}
-            <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-white/15 border border-white/20 tabular-nums">
-              {(buscaMeta.duracaoMs / 1000).toFixed(1)}s
-            </span>
-          </div>
-        )}
-
-        <div className="pointer-events-none absolute -right-8 -bottom-10 w-[220px] h-[220px] rounded-full opacity-30" style={{ background: "radial-gradient(circle, rgba(200,217,230,0.5), transparent 70%)" }} />
-      </section>
-
-      {buscaErro && (
-        <div className="flex items-start gap-2 p-3 rounded-2xl border" style={{ background: "rgba(217,138,0,0.06)", borderColor: "rgba(217,138,0,0.28)" }}>
-          <AlertCircle size={13} className="text-amber-700 flex-shrink-0 mt-0.5" />
-          <p className="text-[11.5px] text-amber-900 leading-relaxed">{buscaErro}</p>
-        </div>
-      )}
-
-      {/* Modo ASSISTIDO — 4 atalhos pré-filtrados no ZAP */}
+      {/* MODO ASSISTIDO — CTA principal. 4 atalhos pré-filtrados no ZAP */}
       {urlsAssistidas.length > 0 && (
         <section
-          ref={assistidoRef}
-          className="rounded-3xl border-2 bg-white p-5 lg:p-6 space-y-4 scroll-mt-24"
-          style={{ borderColor: "rgba(86,124,141,0.35)" }}
+          className="rounded-3xl p-5 lg:p-6 text-beige relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #2F4156 0%, #567C8D 100%)" }}
         >
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div>
-              <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-teal">
-                <ExternalLink size={11} strokeWidth={2.2} />
-                Modo assistido — funciona sempre
+          <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-[240px]">
+              <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-beige/70">
+                <ExternalLink size={12} strokeWidth={2.2} />
+                Buscas prontas no ZAP
               </div>
-              <h3 className="mt-1 font-display text-[15px] font-bold text-navy leading-tight">
-                Abre essas 4 buscas prontas no ZAP
+              <h3 className="mt-1 font-display text-[16px] lg:text-[18px] font-bold leading-tight">
+                Abra 4 buscas filtradas em {alvo.bairro || "no bairro"} agora
               </h3>
-              <p className="mt-1 text-[11.5px] text-teal leading-relaxed max-w-lg">
-                Cada atalho abre o ZAP já filtrado pro seu alvo. Escolha 1 imóvel em cada aba, copie o descritivo, cole no card da amostra abaixo — o painel extrai preço, área, quartos e o resto sozinho.
+              <p className="mt-1.5 text-[11.5px] text-beige/80 leading-relaxed max-w-md">
+                Cada atalho abre o ZAP já filtrado pro seu alvo (área ±25%, quartos). Escolha 1 imóvel de cada aba, copie o descritivo e cole no card da amostra abaixo — o painel extrai preço, área e o resto.
               </p>
             </div>
             <button
               type="button"
               onClick={abrirTodasAssistidas}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-beige text-[12px] font-bold transition-transform active:scale-[0.98]"
-              style={{ background: "linear-gradient(135deg, #2F4156, #567C8D)", boxShadow: "0 10px 22px -8px rgba(47,65,86,0.35)" }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-beige text-navy text-[12.5px] font-bold hover:bg-white transition-colors active:scale-[0.98]"
             >
-              <ExternalLink size={13} />
-              Abrir as 4
+              <ExternalLink size={14} strokeWidth={2.2} />
+              Abrir as 4 abas
             </button>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="relative z-10 mt-5 grid gap-2 sm:grid-cols-2">
             {urlsAssistidas.map((u, i) => (
               <a
                 key={u.href}
                 href={u.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-start gap-3 p-3 rounded-2xl border border-sky/50 bg-beige/40 hover:border-teal hover:bg-white transition-colors"
+                className="group flex items-start gap-3 p-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors"
               >
-                <span className="w-8 h-8 rounded-lg grid place-items-center text-beige font-display font-bold text-[13px] flex-shrink-0" style={{ background: "linear-gradient(135deg, #2F4156, #567C8D)" }}>
+                <span className="w-8 h-8 rounded-lg grid place-items-center text-navy font-display font-bold text-[13px] flex-shrink-0 bg-beige">
                   {i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12.5px] font-bold text-navy truncate">{u.titulo}</div>
-                  <div className="text-[10.5px] text-teal truncate">{u.descricao} · abre no {u.fonte}</div>
+                  <div className="text-[12.5px] font-bold text-beige truncate">{u.titulo}</div>
+                  <div className="text-[10.5px] text-beige/75 truncate">{u.descricao}</div>
                 </div>
-                <ExternalLink size={13} className="text-teal group-hover:translate-x-0.5 transition-transform mt-1 flex-shrink-0" />
+                <ExternalLink size={13} className="text-beige/70 group-hover:translate-x-0.5 transition-transform mt-1 flex-shrink-0" />
               </a>
             ))}
           </div>
+
+          <div className="pointer-events-none absolute -right-8 -bottom-10 w-[220px] h-[220px] rounded-full opacity-30" style={{ background: "radial-gradient(circle, rgba(200,217,230,0.5), transparent 70%)" }} />
         </section>
+      )}
+
+      {/* BUSCA AUTOMÁTICA — opcional, secundária. Frequentemente bloqueada pelo ZAP */}
+      <section className="rounded-3xl border border-sky/60 bg-white p-4 lg:p-5">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-teal">
+              <Radar size={11} strokeWidth={2.2} />
+              Busca automática (experimental)
+            </div>
+            <p className="mt-1 text-[11.5px] text-navy/70 leading-relaxed max-w-md">
+              Tenta puxar 6 amostras diretas do ZAP, ranqueadas por similaridade. Às vezes o ZAP bloqueia — nesse caso use os atalhos acima.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={buscarAutomatico}
+            disabled={buscando}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-navy text-[12px] font-bold bg-beige border border-sky hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {buscando ? <Loader2 size={13} className="animate-spin" /> : <Radar size={13} strokeWidth={2.2} />}
+            {buscando ? "Tentando..." : "Tentar busca automática"}
+          </button>
+        </div>
+
+        {buscaMeta && buscaMeta.candidatosRankeados > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-teal/10 border border-teal/30 text-teal">
+              {buscaMeta.totalDisponivel.toLocaleString("pt-BR")} anúncios encontrados
+            </span>
+            <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-teal/10 border border-teal/30 text-teal">
+              {buscaMeta.candidatosRankeados} rankeados
+            </span>
+            {buscaMeta.ampliouParaCidade && (
+              <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-teal/10 border border-teal/30 text-teal">
+                Ampliei pra cidade
+              </span>
+            )}
+          </div>
+        )}
+      </section>
+
+      {buscaErro && autoTentado && (
+        <div className="flex items-start gap-2 p-3 rounded-2xl border" style={{ background: "rgba(217,138,0,0.06)", borderColor: "rgba(217,138,0,0.28)" }}>
+          <AlertCircle size={13} className="text-amber-700 flex-shrink-0 mt-0.5" />
+          <p className="text-[11.5px] text-amber-900 leading-relaxed">{buscaErro}</p>
+        </div>
       )}
 
       {/* LISTA DE AMOSTRAS */}

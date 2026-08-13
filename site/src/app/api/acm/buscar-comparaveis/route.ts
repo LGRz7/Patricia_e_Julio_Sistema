@@ -9,9 +9,9 @@ import type { AmostraACM, ImovelAlvoACM } from "@/types/acm"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
-// Vercel Pro + config em vercel.json permite 40s. Sparticuz Chromium demora
-// 3-5s pra subir cold, mais 5-10s pra navegar/interceptar a Glue API do ZAP.
-export const maxDuration = 40
+// HTTP fetch tem timeout interno de 6s. Deixamos 15s no total pra caber
+// eventuais retries + processing sem estourar o serverless.
+export const maxDuration = 15
 
 /** Corta a promise em `ms` — usado pra garantir resposta útil mesmo se o scraper travar. */
 function comTimeout<T>(p: Promise<T>, ms: number, tag: string): Promise<T> {
@@ -58,8 +58,8 @@ export async function POST(req: Request) {
   }
   const top = Math.min(Math.max(body.top ?? 6, 4), 10)
 
-  // Timeout global de 32s pro scraping (playwright + navegação + intercept).
-  // Se estourar, cai no fallback assistido (mesmo caminho de 0 comparáveis).
+  // Timeout global de 10s pro scraping HTTP. Se estourar, cai no fallback
+  // assistido (mesmo caminho de 0 comparáveis).
   const inicio = Date.now()
   let scr
   try {
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
         size: 30,
         focarBairro: true,
       }),
-      32000,
+      10000,
       "scraper primário",
     )
   } catch (e) {
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
           size: 30,
           focarBairro: false,
         }),
-        12000,
+        8000,
         "scraper amplo",
       )
       comparaveis = scr2.comparaveis
