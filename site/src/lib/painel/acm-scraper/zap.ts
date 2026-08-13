@@ -63,7 +63,10 @@ export interface ComparavelZap {
 const API_BASE = "https://glue-api.zapimoveis.com.br/v2/listings"
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-const TIMEOUT_MS = 8000
+// 6s é o sweet spot: o Cloudflare do ZAP responde em <3s se vai deixar passar;
+// se for bloquear, também responde rápido com 403. Timeout maior só faz o
+// serverless da Vercel estourar sem retorno útil.
+const TIMEOUT_MS = 6000
 
 const INCLUDE_FIELDS = [
   "search(result(",

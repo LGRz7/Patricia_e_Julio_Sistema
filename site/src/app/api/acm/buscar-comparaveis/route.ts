@@ -3,22 +3,31 @@ import { cookies } from "next/headers"
 import { randomUUID } from "crypto"
 import { COOKIE_NAME, verificarSessionToken } from "@/lib/painel/auth"
 import { buscarComparaveis } from "@/lib/painel/acm-scraper"
+import { gerarUrlsAssistidasZap } from "@/lib/painel/acm-scraper/assisted-urls"
 import { calcSimilaridade, DEFAULT_WEIGHTS } from "@/lib/painel/acm-calc"
 import type { AmostraACM, ImovelAlvoACM } from "@/types/acm"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
-// Playwright pode levar 5-8s no cold start — dá 30s de folga (Vercel Pro).
-// Em Vercel free tier o cap é 10s; se der timeout, o orquestrador cai pra HTTP → assisted.
-export const maxDuration = 30
+// Hobby tier corta em 10s, Pro em 60s. Deixamos 25s — o suficiente pro
+// Playwright quando disponível, mas curto pra não travar a UX se pegar timeout.
+export const maxDuration = 25
+
+/** Corta a promise em `ms` — usado pra garantir resposta útil mesmo se o scraper travar. */
+function comTimeout<T>(p: Promise<T>, ms: number, tag: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`${tag} timeout ${ms}ms`)), ms)),
+  ])
+}
 
 /**
  * POST /api/acm/buscar-comparaveis
  * Body: dados do imóvel-alvo + { top?: number }
  * Retorna: { amostras[], urlsAssistidas[], meta }
  *
- * Se `amostras.length === 0` e `urlsAssistidas.length > 0`, o cliente
- * deve mostrar UI de "abrir 4 buscas no ZAP" (modo assisted).
+ * Nunca lança 500 — se o scraper falhar, ainda devolve 200 com `urlsAssistidas`
+ * pra o cliente mostrar o modo assistido (4 links de busca no ZAP prontos).
  */
 export async function POST(req: Request) {
   const token = cookies().get(COOKIE_NAME)?.value
@@ -49,31 +58,72 @@ export async function POST(req: Request) {
   }
   const top = Math.min(Math.max(body.top ?? 6, 4), 10)
 
+  // Timeout global de 20s pro scraping. Se estourar, cai no fallback assistido
+  // (mesmo comportamento de quando o scraper retorna 0 comparáveis).
   const inicio = Date.now()
-  const scr = await buscarComparaveis({
-    cidade: alvo.cidade,
-    bairro: alvo.bairro,
-    areaAlvo: alvo.areaTotal,
-    quartos: alvo.quartos || undefined,
-    size: 30,
-    focarBairro: true,
-  })
+  let scr
+  try {
+    scr = await comTimeout(
+      buscarComparaveis({
+        cidade: alvo.cidade,
+        bairro: alvo.bairro,
+        areaAlvo: alvo.areaTotal,
+        quartos: alvo.quartos || undefined,
+        size: 30,
+        focarBairro: true,
+      }),
+      20000,
+      "scraper primário",
+    )
+  } catch (e) {
+    // Se o scraper primário travou, ainda entrega URLs assistidas
+    const urlsAssistidas = gerarUrlsAssistidasZap({
+      cidade: alvo.cidade,
+      bairro: alvo.bairro,
+      areaAlvo: alvo.areaTotal,
+      quartos: alvo.quartos || undefined,
+    })
+    return NextResponse.json({
+      amostras: [],
+      urlsAssistidas,
+      meta: {
+        modo: "assisted",
+        totalDisponivel: 0,
+        candidatosApos: 0,
+        candidatosRankeados: 0,
+        ampliouParaCidade: false,
+        erro: (e as Error).message || "busca automática falhou",
+        duracaoMs: Date.now() - inicio,
+        fontesConsultadas: ["ZAP"],
+        solicitadoPor: user.papel,
+      },
+    })
+  }
   const duracaoMs = Date.now() - inicio
 
   // Se ficou pouco e temos coordenadas do bairro, tenta cidade toda no mesmo modo
   let comparaveis = scr.comparaveis
   let ampliouParaCidade = false
   if (comparaveis.length < top && scr.modo !== "assisted" && !scr.usouFallbackCidade) {
-    const scr2 = await buscarComparaveis({
-      cidade: alvo.cidade,
-      bairro: alvo.bairro,
-      areaAlvo: alvo.areaTotal,
-      quartos: alvo.quartos || undefined,
-      size: 30,
-      focarBairro: false,
-    })
-    comparaveis = scr2.comparaveis
-    ampliouParaCidade = true
+    try {
+      const scr2 = await comTimeout(
+        buscarComparaveis({
+          cidade: alvo.cidade,
+          bairro: alvo.bairro,
+          areaAlvo: alvo.areaTotal,
+          quartos: alvo.quartos || undefined,
+          size: 30,
+          focarBairro: false,
+        }),
+        10000,
+        "scraper amplo",
+      )
+      comparaveis = scr2.comparaveis
+      ampliouParaCidade = true
+    } catch (e) {
+      // amplia falhou — segue com o que tinha
+      console.warn("[acm/buscar] scraper amplo falhou:", (e as Error).message)
+    }
   }
 
   // Converte pra AmostraACM

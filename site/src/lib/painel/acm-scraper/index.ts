@@ -27,15 +27,42 @@ export interface ScraperResultado {
   urlsAssistidas?: UrlAssistida[]
 }
 
+/**
+ * Vercel serverless não tem Chromium disponível fora da rota que configura
+ * `@sparticuz/chromium` explicitamente. Tentar Playwright lá causa hang de 5-30s
+ * enquanto o launch procura um binário que não existe — melhor pular na hora.
+ *
+ * Local (`npm run dev`) e Vercel Pro com o binário wired-up podem forçar via
+ * `PLAYWRIGHT_ACM=1`.
+ */
+function playwrightHabilitado(): boolean {
+  if (process.env.PLAYWRIGHT_ACM === "0") return false
+  if (process.env.PLAYWRIGHT_ACM === "1") return true
+  // Default: só tenta fora do Vercel (dev local, VPS próprio, etc.)
+  return !process.env.VERCEL
+}
+
+/** Timeout global do playwright pra não travar o serverless. */
 async function tentarPlaywright(input: BuscaComparaveisInput): Promise<ScraperResultado | null> {
+  if (!playwrightHabilitado()) {
+    console.info("[scraper] Playwright pulado (Vercel serverless).")
+    return null
+  }
   try {
     // Import dinâmico pra não quebrar build em ambiente sem playwright instalado
     const mod = await import("./zap-playwright").catch(() => null)
     if (!mod?.buscarComparaveisZapPlaywright) return null
-    const r = await mod.buscarComparaveisZapPlaywright(input)
+
+    // Corta em 22s: acima disso, Vercel free/pro estoura mesmo com maxDuration 30
+    const HARD_TIMEOUT = 22000
+    const run = mod.buscarComparaveisZapPlaywright(input)
+    const timeout = new Promise<ScraperResultado>((_, rej) =>
+      setTimeout(() => rej(new Error(`playwright timeout ${HARD_TIMEOUT}ms`)), HARD_TIMEOUT),
+    )
+    const r = await Promise.race([run, timeout])
     return { ...r, modo: "playwright" }
   } catch (e) {
-    console.warn("[scraper] Playwright indisponível:", (e as Error).message)
+    console.warn("[scraper] Playwright falhou:", (e as Error).message)
     return null
   }
 }
@@ -49,23 +76,24 @@ export async function buscarComparaveis(input: BuscaComparaveisInput): Promise<S
   }
   const urlsAssistidas = gerarUrlsAssistidasZap(assistedInput)
 
-  // 1) Playwright
+  // 1) Playwright (só fora do Vercel — no serverless o binário não está disponível)
   const viaPlaywright = await tentarPlaywright(input)
   if (viaPlaywright && viaPlaywright.comparaveis.length > 0) {
     return { ...viaPlaywright, urlsAssistidas }
   }
 
-  // 2) HTTP direto
+  // 2) HTTP direto — rápido, mas pode ser 403 pelo Cloudflare do ZAP
   const viaHttp = await buscarComparaveisZap(input)
   if (viaHttp.comparaveis.length > 0) {
     return { ...viaHttp, modo: "http", urlsAssistidas }
   }
 
-  // 3) Assisted — sem comparaveis, mas com URLs pro corretor abrir
+  // 3) Assisted — sem comparáveis auto, MAS sempre com as 4 URLs prontas
+  //    (o corretor abre no ZAP, escolhe, cola o texto — parser cuida)
   const erroFinal =
     viaPlaywright?.erro ||
     viaHttp.erro ||
-    "Sem comparáveis automáticos disponíveis."
+    "Busca automática indisponível no momento."
   return {
     comparaveis: [],
     totalDisponivel: viaHttp.totalDisponivel ?? 0,

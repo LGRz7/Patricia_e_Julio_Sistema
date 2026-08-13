@@ -9,6 +9,7 @@ import type { AmostraACM, FonteAmostra, ImovelAlvoACM } from "@/types/acm"
 import { parseAmostraTexto, camposFaltantes } from "@/lib/painel/acm-parser"
 import { calcPrecoM2, computeSugestao } from "@/lib/painel/acm-calc"
 import { apiBuscarComparaveis, type BuscaComparaveisMeta, type UrlAssistida } from "@/lib/painel/acm-api"
+import { gerarUrlsAssistidasZap as gerarUrlsAssistidasFallback } from "@/lib/painel/acm-scraper/assisted-urls"
 import {
   CampoTexto, CampoNumero, CampoValor, CampoAreaTexto, CampoSelect,
   fmtReais, fmtM2,
@@ -69,8 +70,8 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
         // Modo assistido: mostra as URLs pra o corretor abrir e colar depois
         setBuscaErro(
           meta.erro
-            ? `Busca automática indisponível (${meta.erro}). Use os atalhos abaixo pra abrir as buscas no ZAP.`
-            : "Sem comparáveis retornados. Use os atalhos abaixo pra procurar no ZAP e colar o texto."
+            ? `Busca automática bloqueada pelo ZAP (${meta.erro}). Use os 4 atalhos abaixo — abrem o ZAP filtrado, você escolhe e cola o texto.`
+            : "Sem resultados na busca automática. Use os 4 atalhos abaixo pra procurar no ZAP e colar o texto no card da amostra."
         )
         return
       }
@@ -82,7 +83,18 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
         return clean
       }))
     } catch (e) {
-      setBuscaErro((e as Error).message)
+      // Erro de rede / 500 / timeout de fetch — mesmo assim gera os atalhos locais
+      // pra o corretor não ficar preso. `gerarUrlsAssistidasFallback` roda no browser.
+      const urlsFallback = gerarUrlsAssistidasFallback({
+        cidade: alvo.cidade,
+        bairro: alvo.bairro,
+        areaAlvo: alvo.areaTotal,
+        quartos: alvo.quartos || undefined,
+      })
+      setUrlsAssistidas(urlsFallback)
+      setBuscaErro(
+        `Não deu pra buscar automaticamente (${(e as Error).message}). Use os 4 atalhos abaixo pra procurar no ZAP.`,
+      )
     } finally {
       setBuscando(false)
     }
@@ -215,19 +227,22 @@ export function Step2Amostras({ alvo, amostras, onChange }: Props) {
       )}
 
       {/* Modo ASSISTIDO — 4 atalhos pré-filtrados no ZAP */}
-      {urlsAssistidas.length > 0 && amostras.length === 0 && (
-        <section className="rounded-3xl border border-sky/60 bg-white p-5 lg:p-6 space-y-4">
+      {urlsAssistidas.length > 0 && (
+        <section
+          className="rounded-3xl border-2 bg-white p-5 lg:p-6 space-y-4"
+          style={{ borderColor: "rgba(86,124,141,0.35)" }}
+        >
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-teal">
                 <ExternalLink size={11} strokeWidth={2.2} />
-                Modo assistido
+                Modo assistido — funciona sempre
               </div>
               <h3 className="mt-1 font-display text-[15px] font-bold text-navy leading-tight">
                 Abre essas 4 buscas prontas no ZAP
               </h3>
               <p className="mt-1 text-[11.5px] text-teal leading-relaxed max-w-lg">
-                Cada atalho abre o ZAP já filtrado pro seu alvo. Escolha 1 imóvel em cada aba, copie o descritivo, cole aqui — o painel extrai preço, área, quartos e o resto sozinho.
+                Cada atalho abre o ZAP já filtrado pro seu alvo. Escolha 1 imóvel em cada aba, copie o descritivo, cole no card da amostra abaixo — o painel extrai preço, área, quartos e o resto sozinho.
               </p>
             </div>
             <button
