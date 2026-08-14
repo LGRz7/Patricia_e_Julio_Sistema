@@ -118,14 +118,45 @@ export default function EstudioPage() {
           imovelSlug: formato === "imovel" ? imovelSlug : undefined,
         }),
       })
-      const data: RespostaGerar = await r.json()
+
+      // Parsing defensivo — o servidor pode devolver body vazio (ex: 504 do
+      // Vercel quando estoura maxDuration) ou HTML de erro. Trata os dois.
+      const rawText = await r.text()
+      let data: RespostaGerar = {}
+      if (rawText.trim()) {
+        try {
+          data = JSON.parse(rawText) as RespostaGerar
+        } catch {
+          // Resposta não-JSON (provavelmente HTML de erro da Vercel)
+          data = {
+            error: `Servidor devolveu resposta inválida (${r.status})`,
+            hint: r.status === 504
+              ? "A geração passou de 60s e a Vercel matou a requisição. Tenta com um prompt mais simples."
+              : "A resposta veio quebrada. Tenta de novo em uns segundos.",
+            detail: rawText.slice(0, 300),
+          }
+        }
+      } else {
+        // Body vazio — timeout do Vercel (504) ou lambda morreu sem escrever
+        data = {
+          error: r.status === 504 || r.status === 408
+            ? "Timeout — geração passou de 60s"
+            : `Servidor não respondeu (${r.status})`,
+          hint: "A Vercel matou a função antes dela terminar. Tenta de novo — o cold start do Chromium só acontece na primeira vez, a segunda deve ser mais rápida.",
+        }
+      }
+
       if (!r.ok) {
         setResultado({ error: data.error || `Falhou (${r.status})`, hint: data.hint, detail: data.detail })
       } else {
         setResultado(data)
       }
     } catch (err) {
-      setResultado({ error: (err as Error).message })
+      // Erro de rede / fetch abortado
+      setResultado({
+        error: (err as Error).message || "Erro de rede",
+        hint: "Confere sua conexão. Se persistir, o servidor pode estar fora do ar.",
+      })
     } finally {
       setGerando(false)
     }

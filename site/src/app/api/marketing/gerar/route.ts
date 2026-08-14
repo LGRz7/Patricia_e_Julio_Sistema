@@ -146,8 +146,9 @@ async function handlePost(req: Request) {
         { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
       ],
-      // maxTokens alto porque o Llama tende a mandar preâmbulo em markdown antes do JSON
-      { temperature: 0.75, maxTokens: 8000, json: true },
+      // 4000 tokens são de sobra pro JSON de plano (mesmo com preâmbulo do Llama).
+      // Era 8000 antes — reduzir corta 2-4s de latência do LLM.
+      { temperature: 0.75, maxTokens: 4000, json: true },
     )
   } catch (err) {
     if (err instanceof LlmError) {
@@ -252,21 +253,22 @@ async function handlePost(req: Request) {
   console.log(`🎨 Decisão de versões: tipo="${tipo}", slides=${plano.slides.length}`)
   
   if (plano.slides.length === 1) {
-    // Gerar 5 variações do mesmo conteúdo com tipos de slide diferentes
-    // Funciona para post, story, reels - qualquer conteúdo unitário
-    const tiposVariacao = ["solo", "capa", "duo", "solo", "capa"] // mix de estilos
+    // 3 variações visuais do mesmo conteúdo. Era 5 antes — o custo total
+    // (Chromium + Blob upload) estourava o maxDuration de 60s da Vercel.
+    // 3 versões cobrem "solo / capa / duo" que são os estilos mais úteis.
+    const tiposVariacao = ["solo", "capa", "duo"]
     const slide = plano.slides[0]
-    
-    console.log(`✓ Gerando 5 versões visuais diferentes do mesmo conteúdo (tipo="${tipo}")`)
-    
-    for (let i = 0; i < 5; i++) {
+
+    console.log(`✓ Gerando 3 versões visuais diferentes do mesmo conteúdo (tipo="${tipo}")`)
+
+    for (let i = 0; i < tiposVariacao.length; i++) {
       const tipoSlide = tiposVariacao[i] as SlideContent["type"]
       versoes.push({
         slides: [{
           ...slide,
-          type: tipoSlide
+          type: tipoSlide,
         }],
-        variacao: `v${i + 1}-${tipoSlide}`
+        variacao: `v${i + 1}-${tipoSlide}`,
       })
     }
   } else {
@@ -330,6 +332,9 @@ async function handlePost(req: Request) {
     }, { status: 502 })
   }
 
+  // Uploads pro Blob em paralelo — antes era sequencial (~500ms cada, 15
+  // uploads = 7-8s). Em paralelo total fica ~1-2s independente do número.
+  const tarefasUpload: Promise<SlideGerado>[] = []
   for (let v = 0; v < versoes.length; v++) {
     const versao = versoes[v]
     const pngs = pngsPorVersao[v] || []
@@ -337,15 +342,24 @@ async function handlePost(req: Request) {
       const filename = versoes.length > 1
         ? `${versao.variacao}-slide-${String(i + 1).padStart(2, "0")}.png`
         : `slide-${String(i + 1).padStart(2, "0")}.png`
-
       const blobKey = `gen/${slug}/${filename}`
-      const url = await salvarPng(pngs[i], blobKey, outDir, filename)
-      todasSlides.push({
-        versao: versao.variacao,
-        index: i + 1,
-        filename,
-        url,
-      })
+      const idx = i + 1
+      tarefasUpload.push(
+        salvarPng(pngs[i], blobKey, outDir, filename).then((url) => ({
+          versao: versao.variacao,
+          index: idx,
+          filename,
+          url,
+        })),
+      )
+    }
+  }
+  const uploadResults = await Promise.allSettled(tarefasUpload)
+  for (const r of uploadResults) {
+    if (r.status === "fulfilled") {
+      todasSlides.push(r.value)
+    } else {
+      console.error("[gerar] upload falhou:", r.reason)
     }
   }
 

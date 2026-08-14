@@ -487,9 +487,28 @@ export async function renderizarVarias(htmls: string[], tipo: TipoCriativo): Pro
       try {
         // Converte imagens locais pra base64 antes de carregar
         const htmlComImagensBase64 = await converterImagensParaBase64(html)
-        await page.setContent(htmlComImagensBase64, { waitUntil: "networkidle" })
-        // Aguarda fontes carregarem
-        await page.waitForTimeout(500)
+
+        // "load" em vez de "networkidle": o template carrega Google Fonts via
+        // <link>, e networkidle exige 500ms de silêncio total de rede — na
+        // serverless da Vercel, a latência do CDN do Google faz isso demorar
+        // 10-30s (ou estourar timeout). "load" apenas espera onload disparar,
+        // que é ~1-2s. Depois esperamos explicitamente as fontes prontas.
+        await page.setContent(htmlComImagensBase64, {
+          waitUntil: "load",
+          timeout: 15000,
+        })
+
+        // Aguarda o document.fonts terminar. Se levar mais de 3s (fonts
+        // externas travadas), segue mesmo assim — melhor screenshot com
+        // system font fallback do que timeout na lambda.
+        await page.evaluate(async () => {
+          try {
+            await Promise.race([
+              (document as unknown as { fonts: { ready: Promise<void> } }).fonts.ready,
+              new Promise((r) => setTimeout(r, 3000)),
+            ])
+          } catch { /* segue */ }
+        })
 
         const slides = await page.locator(".slide").all()
         const pngs: Buffer[] = []
