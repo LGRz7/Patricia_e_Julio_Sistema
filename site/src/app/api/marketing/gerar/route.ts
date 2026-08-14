@@ -17,7 +17,7 @@ import { randomUUID } from "crypto"
 import { COOKIE_NAME, verificarSessionToken } from "@/lib/painel/auth"
 import { chat, llmConfigured, LlmError } from "@/lib/painel/llm.server"
 import { montarPromptPlanejadorSlides } from "@/lib/painel/planejador-slides.server"
-import { gerarHTML, renderizarPNGs, type SlideContent, type TemplateConfig } from "@/lib/painel/template-renderer.server"
+import { gerarHTML, renderizarVarias, type SlideContent, type TemplateConfig } from "@/lib/painel/template-renderer.server"
 import { montarSystemPromptPlanejador } from "@/lib/painel/contexto-loader.server"
 import { createPedido } from "@/lib/painel/marketing-store.server"
 import { getImovelMerged as getImovel } from "@/lib/painel/imoveis-store.server"
@@ -26,12 +26,35 @@ import type { FormatoPost, TipoCriativo } from "@/types/marketing"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
-export const maxDuration = 120  // gpt-image-2 pode levar 30-60s por imagem
+export const maxDuration = 60  // Vercel Hobby cap. 5 versões levam ~15-25s no CF + Playwright.
 
 const FORMATOS_VALIDOS: FormatoPost[] = ["corretores", "imovel", "copy"]
 
 const PUBLIC_ROOT = path.resolve(process.cwd(), "public")
 const GEN_ROOT = path.join(PUBLIC_ROOT, "gen")
+
+// Em produção Vercel o filesystem é read-only exceto /tmp — usamos Vercel Blob.
+// Em dev (BLOB_READ_WRITE_TOKEN ausente) cai pro filesystem em public/gen.
+const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN
+
+/** Persiste um PNG e devolve URL pública. Blob em prod, filesystem em dev. */
+async function salvarPng(bytes: Buffer, blobKey: string, outDir: string, filename: string): Promise<string> {
+  if (USE_BLOB) {
+    const { put } = await import("@vercel/blob")
+    const res = await put(blobKey, bytes, {
+      access: "public",
+      contentType: "image/png",
+      allowOverwrite: true,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    })
+    return res.url
+  }
+  await fs.mkdir(outDir, { recursive: true })
+  await fs.writeFile(path.join(outDir, filename), bytes)
+  // No dev, Next serve /public estaticamente.
+  const publicRel = path.relative(PUBLIC_ROOT, path.join(outDir, filename)).split(path.sep).join("/")
+  return `/${publicRel}`
+}
 
 interface Plano {
   descricao?: string
@@ -98,7 +121,8 @@ export async function POST(req: Request) {
         { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
       ],
-      { temperature: 0.75, maxTokens: 3000, json: true },
+      // maxTokens alto porque o Llama tende a mandar preâmbulo em markdown antes do JSON
+      { temperature: 0.75, maxTokens: 8000, json: true },
     )
   } catch (err) {
     if (err instanceof LlmError) {
@@ -127,25 +151,26 @@ export async function POST(req: Request) {
   }
 
   let plano: Plano
-  try {
-    plano = JSON.parse(planoResp.content)
-  } catch {
-    // Alguns modelos ainda embrulham em ```json — tenta extrair
-    const match = planoResp.content.match(/\{[\s\S]*\}/)
-    if (!match) {
-      return NextResponse.json({
-        error: "planejador retornou algo que não é JSON",
-        detail: planoResp.content.slice(0, 300),
-      }, { status: 502 })
-    }
-    try { plano = JSON.parse(match[0]) }
-    catch {
-      return NextResponse.json({
-        error: "planejador retornou JSON inválido",
-        detail: planoResp.content.slice(0, 300),
-      }, { status: 502 })
-    }
+  const rawContent = planoResp.content
+  const tentativas: string[] = [rawContent]
+  // Estratégia 1: se veio dentro de ```json ... ```
+  const fenceMatch = rawContent.match(/```(?:json)?\s*\n?([\s\S]*?)```/)
+  if (fenceMatch?.[1]) tentativas.push(fenceMatch[1])
+  // Estratégia 2: primeiro { … último } (fallback)
+  const greedy = rawContent.match(/\{[\s\S]*\}/)
+  if (greedy?.[0]) tentativas.push(greedy[0])
+
+  let parsed: Plano | null = null
+  for (const cand of tentativas) {
+    try { parsed = JSON.parse(cand.trim()); break } catch { /* segue */ }
   }
+  if (!parsed) {
+    return NextResponse.json({
+      error: "planejador retornou JSON inválido",
+      detail: rawContent.slice(0, 600),
+    }, { status: 502 })
+  }
+  plano = parsed
 
   const imagePrompts = Array.isArray(plano.slides) ? plano.slides : []
   if (imagePrompts.length === 0) {
@@ -158,7 +183,7 @@ export async function POST(req: Request) {
   // 6) Etapa 2 — gerar HTML e renderizar com Playwright
   const slug = `${formato}-${Date.now()}-${randomUUID().slice(0, 6)}`
   const outDir = path.join(GEN_ROOT, slug)
-  await fs.mkdir(outDir, { recursive: true })
+  if (!USE_BLOB) await fs.mkdir(outDir, { recursive: true })
 
   // Determinar fotos baseado no formato
   let fotoCorretores: string | undefined
@@ -220,9 +245,9 @@ export async function POST(req: Request) {
   }
 
   const todasSlides: SlideGerado[] = []
-  let ultimoHTML = ""
-  
-  for (const versao of versoes) {
+
+  // Monta todos os HTMLs primeiro (rápido, tudo em memória)
+  const htmls = versoes.map((versao) => {
     const config: TemplateConfig = {
       formato,
       tipo,
@@ -245,41 +270,60 @@ export async function POST(req: Request) {
       fotoCorretores,
       fotoImovel,
     }
+    return gerarHTML(config)
+  })
+  const ultimoHTML = htmls[htmls.length - 1] || ""
 
-    const html = gerarHTML(config)
-    ultimoHTML = html
-    
-    let pngs: Buffer[]
-    try {
-      pngs = await renderizarPNGs(html, tipo)
-    } catch (err) {
-      console.error(`Erro ao renderizar versão ${versao.variacao}:`, (err as Error).message)
-      continue
-    }
+  // Renderiza TUDO num único browser (1 cold start em vez de 5 — 20-30s a menos
+  // e sem risco de OOM/timeout na serverless).
+  let pngsPorVersao: Buffer[][] = []
+  try {
+    pngsPorVersao = await renderizarVarias(htmls, tipo)
+  } catch (err) {
+    console.error("Erro no render em batch:", (err as Error).message)
+    return NextResponse.json({
+      error: "Renderização falhou",
+      hint: "O Chromium não conseguiu subir ou travou. Tenta de novo — se persistir, reduz o número de versões.",
+      detail: (err as Error).message,
+    }, { status: 502 })
+  }
 
-    // Salvar PNGs desta versão
+  for (let v = 0; v < versoes.length; v++) {
+    const versao = versoes[v]
+    const pngs = pngsPorVersao[v] || []
     for (let i = 0; i < pngs.length; i++) {
-      const filename = versoes.length > 1 
+      const filename = versoes.length > 1
         ? `${versao.variacao}-slide-${String(i + 1).padStart(2, "0")}.png`
         : `slide-${String(i + 1).padStart(2, "0")}.png`
-      
-      await fs.writeFile(path.join(outDir, filename), pngs[i])
+
+      const blobKey = `gen/${slug}/${filename}`
+      const url = await salvarPng(pngs[i], blobKey, outDir, filename)
       todasSlides.push({
         versao: versao.variacao,
         index: i + 1,
         filename,
-        url: `/gen/${slug}/${filename}`,
+        url,
       })
     }
   }
 
-  // Salva legenda e plano na pasta pra debug
-  const legenda = plano.caption?.trim() || ""
-  if (legenda) {
-    await fs.writeFile(path.join(outDir, "legenda.md"), legenda, "utf8")
+  // Se todas as versões falharam, retorna erro claro em vez de 201 com slides vazios
+  if (todasSlides.length === 0) {
+    return NextResponse.json({
+      error: "Nenhuma imagem foi gerada",
+      hint: "O Playwright não conseguiu screenshotar. Tenta simplificar o prompt ou tenta de novo em alguns segundos.",
+    }, { status: 502 })
   }
-  await fs.writeFile(path.join(outDir, "plano.json"), JSON.stringify(plano, null, 2), "utf8")
-  await fs.writeFile(path.join(outDir, "template.html"), ultimoHTML, "utf8")
+
+  // Legenda / plano / template ficam só em dev — em prod não precisa persistir debug.
+  const legenda = plano.caption?.trim() || ""
+  if (!USE_BLOB) {
+    if (legenda) {
+      await fs.writeFile(path.join(outDir, "legenda.md"), legenda, "utf8")
+    }
+    await fs.writeFile(path.join(outDir, "plano.json"), JSON.stringify(plano, null, 2), "utf8")
+    await fs.writeFile(path.join(outDir, "template.html"), ultimoHTML, "utf8")
+  }
 
   // 7) Cria pedido no histórico
   const gancho = prompt.split("\n")[0].trim().slice(0, 60) || `${formato} · ${slug}`

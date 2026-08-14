@@ -6,8 +6,35 @@
  * visual 100% seguindo o design guide.
  */
 import "server-only"
-import { chromium } from "playwright"
 import type { FormatoPost, TipoCriativo } from "@/types/marketing"
+
+/**
+ * Chromium dual-mode:
+ *  - Dev / self-host  → `playwright` completo (traz o browser)
+ *  - Vercel serverless → `playwright-core` + `@sparticuz/chromium` (binário slim de ~50MB
+ *    otimizado pro runtime AWS Lambda que a Vercel usa)
+ * Decide pelo env `VERCEL`/`AWS_LAMBDA_FUNCTION_NAME` presentes na Vercel.
+ */
+async function launchChromium() {
+  const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
+  if (isServerless) {
+    const [{ chromium: pwCore }, sparticuzModule] = await Promise.all([
+      import("playwright-core"),
+      import("@sparticuz/chromium"),
+    ])
+    const sparticuz = (sparticuzModule as { default?: typeof sparticuzModule }).default ?? sparticuzModule
+    // @ts-expect-error — @sparticuz/chromium tem tipos frouxos entre versões
+    const executablePath = await sparticuz.executablePath()
+    return pwCore.launch({
+      // @ts-expect-error — args tem shape específico do sparticuz
+      args: sparticuz.args,
+      executablePath,
+      headless: true,
+    })
+  }
+  const { chromium: pw } = await import("playwright")
+  return pw.launch({ headless: true })
+}
 
 export interface SlideContent {
   type: "capa" | "solo" | "duo" | "numero" | "citacao" | "cta" | "foto"
@@ -420,37 +447,70 @@ function gerarSlideCTA(
 /**
  * Renderiza HTML em PNGs via Playwright.
  * Retorna array de Buffers (um por slide).
+ *
+ * Prefira `renderizarVarias([html1, html2, ...])` quando for gerar múltiplas
+ * versões — launcha o Chromium 1 vez só, o que economiza 3-5s por versão
+ * extra e evita OOM/timeout na serverless da Vercel.
  */
 export async function renderizarPNGs(html: string, tipo: TipoCriativo): Promise<Buffer[]> {
+  const grupos = await renderizarVarias([html], tipo)
+  return grupos[0] || []
+}
+
+/**
+ * Renderiza N HTMLs em N grupos de PNGs, reusando o mesmo browser.
+ *
+ * Retorna: `[versao0PNGs[], versao1PNGs[], ...]`
+ *
+ * Ganho concreto: 5 versões antes eram 5 launches × 3-5s cold start (sparticuz)
+ * + 5 renders = ~40s. Agora é 1 launch + 5 renders = ~15s. Sobra folga pro
+ * LLM e Vercel Blob dentro dos 60s de `maxDuration`.
+ */
+export async function renderizarVarias(htmls: string[], tipo: TipoCriativo): Promise<Buffer[][]> {
+  if (htmls.length === 0) return []
+
   const [width, height] = tipo === "story" || tipo === "reels"
     ? [1080, 1920]
     : [1080, 1350]
 
-  const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({
-    viewport: { width, height },
-    deviceScaleFactor: 2,  // retina
-  })
-  const page = await context.newPage()
-  
-  // Converte imagens locais para base64 antes de carregar
-  const htmlComImagensBase64 = await converterImagensParaBase64(html)
-  
-  await page.setContent(htmlComImagensBase64, { waitUntil: "networkidle" })
-  
-  // Aguarda fontes carregarem
-  await page.waitForTimeout(500)
-  
-  const slides = await page.locator(".slide").all()
-  const pngs: Buffer[] = []
-  
-  for (const slide of slides) {
-    const screenshot = await slide.screenshot({ type: "png" })
-    pngs.push(screenshot)
+  const browser = await launchChromium()
+  const resultado: Buffer[][] = []
+
+  try {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      deviceScaleFactor: 2,  // retina
+    })
+
+    for (const html of htmls) {
+      const page = await context.newPage()
+      try {
+        // Converte imagens locais pra base64 antes de carregar
+        const htmlComImagensBase64 = await converterImagensParaBase64(html)
+        await page.setContent(htmlComImagensBase64, { waitUntil: "networkidle" })
+        // Aguarda fontes carregarem
+        await page.waitForTimeout(500)
+
+        const slides = await page.locator(".slide").all()
+        const pngs: Buffer[] = []
+        for (const slide of slides) {
+          const screenshot = await slide.screenshot({ type: "png" })
+          pngs.push(screenshot)
+        }
+        resultado.push(pngs)
+      } catch (err) {
+        console.error("[renderizarVarias] falha numa versão:", (err as Error).message)
+        resultado.push([])
+      } finally {
+        // Fecha a page mas mantém o browser+context vivos pra próxima iteração
+        try { await page.close() } catch { /* ignore */ }
+      }
+    }
+  } finally {
+    try { await browser.close() } catch { /* ignore */ }
   }
-  
-  await browser.close()
-  return pngs
+
+  return resultado
 }
 
 /**
