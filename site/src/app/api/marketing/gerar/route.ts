@@ -63,6 +63,23 @@ interface Plano {
 }
 
 export async function POST(req: Request) {
+  try {
+    return await handlePost(req)
+  } catch (err) {
+    // Última defesa: qualquer coisa não catada vira JSON amigável em vez de HTML.
+    // Se o Vercel devolve HTML de erro, o Safari cliente cospe
+    // "The string did not match the expected pattern" ao tentar r.json().
+    console.error("[gerar] unhandled:", err)
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({
+      error: "Erro interno ao gerar",
+      hint: "A rota morreu de forma inesperada. Tenta de novo — se persistir, o log do Vercel tem o detalhe.",
+      detail: msg.slice(0, 400),
+    }, { status: 500 })
+  }
+}
+
+async function handlePost(req: Request) {
   // 1) Auth
   const token = cookies().get(COOKIE_NAME)?.value
   const user = token ? await verificarSessionToken(token) : null
@@ -90,11 +107,19 @@ export async function POST(req: Request) {
   }
   const tipo: TipoCriativo = body.tipo || "post"
 
-  // 3) Preflight
+  // 3) Preflight — LLM
   if (!llmConfigured()) {
     return NextResponse.json({
       error: "LLM texto não configurado",
       hint: "Recomendo Hugging Face (grátis, sem cartão, sem Account ID): pega o token em https://huggingface.co/settings/tokens (formato hf_...) e cola em HUGGINGFACE_API_TOKEN no site/.env.local.",
+    }, { status: 503 })
+  }
+
+  // 3b) Preflight — Blob (só na Vercel, onde o filesystem é read-only)
+  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json({
+      error: "Vercel Blob não configurado",
+      hint: "Falta o BLOB_READ_WRITE_TOKEN nas env vars da Vercel. Sem ele, as imagens geradas não têm onde ser salvas (filesystem da lambda é read-only).",
     }, { status: 503 })
   }
 
@@ -151,22 +176,39 @@ export async function POST(req: Request) {
   }
 
   let plano: Plano
-  const rawContent = planoResp.content
+  const rawContent = typeof planoResp.content === "string" ? planoResp.content : ""
+  if (!rawContent.trim()) {
+    return NextResponse.json({
+      error: "planejador retornou resposta vazia",
+      hint: "O provedor de LLM devolveu conteúdo em branco. Tenta de novo — se persistir, o modelo pode estar sobrecarregado.",
+    }, { status: 502 })
+  }
   const tentativas: string[] = [rawContent]
-  // Estratégia 1: se veio dentro de ```json ... ```
-  const fenceMatch = rawContent.match(/```(?:json)?\s*\n?([\s\S]*?)```/)
-  if (fenceMatch?.[1]) tentativas.push(fenceMatch[1])
-  // Estratégia 2: primeiro { … último } (fallback)
-  const greedy = rawContent.match(/\{[\s\S]*\}/)
-  if (greedy?.[0]) tentativas.push(greedy[0])
+  // Estratégia 1: se veio dentro de ```json ... ``` (fence markdown)
+  try {
+    const fenceMatch = rawContent.match(/```(?:json)?\s*\n?([\s\S]*?)```/)
+    if (fenceMatch?.[1]) tentativas.push(fenceMatch[1])
+  } catch { /* regex safe */ }
+  // Estratégia 2: primeiro { … último } (greedy fallback)
+  try {
+    const greedy = rawContent.match(/\{[\s\S]*\}/)
+    if (greedy?.[0]) tentativas.push(greedy[0])
+  } catch { /* regex safe */ }
 
   let parsed: Plano | null = null
   for (const cand of tentativas) {
-    try { parsed = JSON.parse(cand.trim()); break } catch { /* segue */ }
+    try {
+      const obj = JSON.parse(cand.trim())
+      if (obj && typeof obj === "object" && Array.isArray(obj.slides)) {
+        parsed = obj as Plano
+        break
+      }
+    } catch { /* segue */ }
   }
   if (!parsed) {
     return NextResponse.json({
       error: "planejador retornou JSON inválido",
+      hint: "O modelo devolveu texto que não bate com o formato esperado. Tenta reescrever o prompt de forma mais clara.",
       detail: rawContent.slice(0, 600),
     }, { status: 502 })
   }
