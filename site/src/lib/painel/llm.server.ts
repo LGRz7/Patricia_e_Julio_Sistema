@@ -97,13 +97,103 @@ export interface ChatResult {
   usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
 }
 
-export async function chat(messages: ChatMessage[], opts: ChatOpts = {}): Promise<ChatResult | null> {
-  if (!textProvider) return null
+/**
+ * Timeout padrão pra qualquer chamada HTTP de LLM — 25s dá folga pro modelo
+ * responder mas evita que o request fique pendurado indefinidamente (o que
+ * trava a lambda e resulta em Load failed / string did not match no cliente).
+ */
+const LLM_TIMEOUT_MS = 25000
 
-  if (textProvider === "openrouter") return chatOpenRouter(messages, opts)
-  if (textProvider === "huggingface") return chatHuggingFace(messages, opts)
-  if (textProvider === "cloudflare") return chatCloudflare(messages, opts)
-  return chatOpenAICompat(textProvider, messages, opts)
+/** Fetch com AbortController + timeout. Rejeita como LlmError timeout. */
+async function fetchComTimeout(
+  url: string,
+  init: RequestInit,
+  provider: string,
+  timeoutMs = LLM_TIMEOUT_MS,
+): Promise<Response> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal })
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      throw new LlmError(408, provider, "", `${provider} timeout ${timeoutMs}ms`)
+    }
+    throw new LlmError(0, provider, "", `${provider} rede: ${(err as Error).message}`)
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
+ * Ordem de fallback pra chat.
+ * Se o primeiro provedor falhar (timeout / 402 / 5xx), tenta o próximo.
+ * Ordem final = textProvider primeiro, depois os outros que têm env var configurada.
+ */
+function ordemFallbackChat(): Provider[] {
+  const disponiveis: Provider[] = []
+  if (OPENROUTER_KEY) disponiveis.push("openrouter")
+  if (HF_TOKEN) disponiveis.push("huggingface")
+  if (CF_ACCOUNT_ID && CF_TOKEN) disponiveis.push("cloudflare")
+  if (POLLINATIONS_KEY) disponiveis.push("pollinations")
+  if (OPENAI_KEY) disponiveis.push("openai")
+  if (!textProvider) return disponiveis
+  // Coloca o textProvider na frente e não duplica
+  return [textProvider, ...disponiveis.filter((p) => p !== textProvider)]
+}
+
+async function chamarProvider(prov: Provider, messages: ChatMessage[], opts: ChatOpts): Promise<ChatResult | null> {
+  if (prov === "openrouter") return chatOpenRouter(messages, opts)
+  if (prov === "huggingface") return chatHuggingFace(messages, opts)
+  if (prov === "cloudflare") return chatCloudflare(messages, opts)
+  return chatOpenAICompat(prov, messages, opts)
+}
+
+/** Quantas vezes re-tentar o MESMO provider quando ele retorna vazio ou erro transitório. */
+const RETRIES_POR_PROVIDER = 2
+
+export async function chat(messages: ChatMessage[], opts: ChatOpts = {}): Promise<ChatResult | null> {
+  const ordem = ordemFallbackChat()
+  if (ordem.length === 0) return null
+
+  let ultimoErro: LlmError | null = null
+
+  for (let i = 0; i < ordem.length; i++) {
+    const prov = ordem[i]
+
+    // Retry no mesmo provider — o Cloudflare Workers AI (grátis) é instável e
+    // retorna resposta vazia ou 5xx de forma intermitente. Retentar resolve a
+    // maioria dos casos sem precisar cair pro fallback (que pode estar sem saldo).
+    for (let tentativa = 1; tentativa <= RETRIES_POR_PROVIDER; tentativa++) {
+      try {
+        const r = await chamarProvider(prov, messages, opts)
+        if (r) return r
+        console.warn(`[llm] ${prov} vazio (tentativa ${tentativa}/${RETRIES_POR_PROVIDER})`)
+      } catch (err) {
+        ultimoErro = err instanceof LlmError ? err : new LlmError(500, prov, "", (err as Error).message)
+        console.warn(`[llm] ${prov} erro ${ultimoErro.status} (tentativa ${tentativa}/${RETRIES_POR_PROVIDER}): ${ultimoErro.message}`)
+
+        // Erros permanentes — não adianta retentar nem esse provider nem com os mesmos dados:
+        //   400 = payload inválido (bug nosso) → aborta tudo
+        //   401/403 = credencial ruim → pula pro próximo provider já
+        //   402 = sem saldo → pula pro próximo provider já
+        if (ultimoErro.status === 400) throw ultimoErro
+        if (ultimoErro.status === 401 || ultimoErro.status === 403 || ultimoErro.status === 402) break
+      }
+      // Backoff curto entre tentativas do mesmo provider
+      if (tentativa < RETRIES_POR_PROVIDER) {
+        await new Promise((r) => setTimeout(r, 600))
+      }
+    }
+    // Esgotou as tentativas desse provider — passa pro próximo
+    if (i < ordem.length - 1) {
+      console.warn(`[llm] ${prov} esgotou tentativas — caindo pro fallback ${ordem[i + 1]}`)
+    }
+  }
+
+  // Todos falharam — propaga o último erro pro caller tratar
+  if (ultimoErro) throw ultimoErro
+  return null
 }
 
 /**
@@ -120,23 +210,23 @@ async function chatOpenRouter(messages: ChatMessage[], opts: ChatOpts): Promise<
   }
   if (opts.json) body.response_format = { type: "json_object" }
 
-  const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const r = await fetchComTimeout("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${OPENROUTER_KEY}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://mazyos.com",  // Seu site
-      "X-Title": "MazyOS Estúdio",          // Nome da app
+      "HTTP-Referer": "https://mazyos.com",
+      "X-Title": "MazyOS Estúdio",
     },
     body: JSON.stringify(body),
-  })
+  }, "openrouter")
   if (!r.ok) {
     const raw = await r.text().catch(() => "")
     throw new LlmError(r.status, "openrouter", raw, extractApiError(raw))
   }
   const j = await r.json()
   const content: string = j?.choices?.[0]?.message?.content || ""
-  if (!content) return null
+  if (!content.trim()) return null
   return { content, model, provider: "openrouter", usage: j?.usage }
 }
 
@@ -155,21 +245,21 @@ async function chatHuggingFace(messages: ChatMessage[], opts: ChatOpts): Promise
   }
   if (opts.json) body.response_format = { type: "json_object" }
 
-  const r = await fetch("https://router.huggingface.co/v1/chat/completions", {
+  const r = await fetchComTimeout("https://router.huggingface.co/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${HF_TOKEN}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  })
+  }, "huggingface")
   if (!r.ok) {
     const raw = await r.text().catch(() => "")
     throw new LlmError(r.status, "huggingface", raw, extractApiError(raw))
   }
   const j = await r.json()
   const content: string = j?.choices?.[0]?.message?.content || ""
-  if (!content) return null
+  if (!content.trim()) return null
   return { content, model, provider: "huggingface", usage: j?.usage }
 }
 
@@ -183,14 +273,14 @@ async function chatCloudflare(messages: ChatMessage[], opts: ChatOpts): Promise<
   }
   if (opts.json) body.response_format = { type: "json_object" }
 
-  const r = await fetch(url, {
+  const r = await fetchComTimeout(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${CF_TOKEN}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  })
+  }, "cloudflare")
   if (!r.ok) {
     const raw = await r.text().catch(() => "")
     throw new LlmError(r.status, "cloudflare", raw, extractApiError(raw))
@@ -199,8 +289,15 @@ async function chatCloudflare(messages: ChatMessage[], opts: ChatOpts): Promise<
   if (!j?.success) {
     throw new LlmError(500, "cloudflare", JSON.stringify(j), extractApiError(JSON.stringify(j)))
   }
-  const content: string = j?.result?.response || ""
-  if (!content) return null
+  // Com response_format json_object, o CF devolve result.response já como OBJETO
+  // (não string). Sem json mode, vem string. Normaliza os dois pra string.
+  const respostaRaw = j?.result?.response
+  const content: string = typeof respostaRaw === "string"
+    ? respostaRaw
+    : respostaRaw != null
+      ? JSON.stringify(respostaRaw)
+      : ""
+  if (!content.trim()) return null
   return { content, model, provider: "cloudflare", usage: j?.result?.usage }
 }
 
@@ -217,21 +314,21 @@ async function chatOpenAICompat(prov: Provider, messages: ChatMessage[], opts: C
   }
   if (opts.json) body.response_format = { type: "json_object" }
 
-  const r = await fetch(`${baseUrl}/chat/completions`, {
+  const r = await fetchComTimeout(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  })
+  }, prov)
   if (!r.ok) {
     const raw = await r.text().catch(() => "")
     throw new LlmError(r.status, prov, raw, extractApiError(raw))
   }
   const j = await r.json()
   const content: string = j?.choices?.[0]?.message?.content || ""
-  if (!content) return null
+  if (!content.trim()) return null
   return { content, model, provider: prov, usage: j?.usage }
 }
 

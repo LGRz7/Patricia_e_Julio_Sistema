@@ -19,9 +19,28 @@ const ARQUIVOS_MEMORIA = [
   ["_memoria/estrategia.md",    "Estratégia do momento"],
 ] as const
 
+/**
+ * Limite de chars por arquivo de memória injetado no system prompt.
+ * O publico-alvo.md tem 14k chars sozinho — jogar tudo no prompt fazia o
+ * Cloudflare Workers AI (llama-3.3) engasgar e retornar vazio de forma
+ * intermitente. 1800 chars/arquivo mantém o essencial e deixa o modelo estável.
+ */
+const MAX_CHARS_MEMORIA = 1800
+
 async function readIfExists(rel: string): Promise<string> {
   try { return await fs.readFile(path.join(MAZY_ROOT, rel), "utf8") }
   catch { return "" }
+}
+
+/** Trunca preservando parágrafos inteiros até o limite. */
+function truncarMemoria(texto: string, limite = MAX_CHARS_MEMORIA): string {
+  const t = texto.trim()
+  if (t.length <= limite) return t
+  const corte = t.slice(0, limite)
+  // Corta no último fim de parágrafo/linha pra não cortar frase no meio
+  const ultimaQuebra = Math.max(corte.lastIndexOf("\n\n"), corte.lastIndexOf("\n"))
+  const base = ultimaQuebra > limite * 0.5 ? corte.slice(0, ultimaQuebra) : corte
+  return base.trim() + "\n[...resumido...]"
 }
 
 export async function montarPromptPlanejadorSlides(opts: {
@@ -150,10 +169,12 @@ FORMATO DO POST: "${opts.formato}"
 - "imovel" → foque no imóvel (quando houver dados do catálogo)
 - "copy" → só texto, sem referências visuais`)
 
-  // Memória
+  // Memória — truncada por arquivo pra não estourar o modelo (ver MAX_CHARS_MEMORIA).
+  // As personas detalhadas já vão separadas em PERSONAS/PERSONA-ALVO abaixo, então
+  // o publico-alvo.md completo (14k chars) seria redundante mesmo.
   partes.push("\n===== MEMÓRIA DA MARCA =====")
   for (const [rel, titulo] of ARQUIVOS_MEMORIA) {
-    const conteudo = (await readIfExists(rel)).trim()
+    const conteudo = truncarMemoria(await readIfExists(rel))
     if (conteudo) partes.push(`\n### ${titulo}\n${conteudo}`)
   }
 
