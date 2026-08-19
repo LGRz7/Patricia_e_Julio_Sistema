@@ -15,6 +15,22 @@ import type { FormatoPost, TipoCriativo } from "@/types/marketing"
  *    otimizado pro runtime AWS Lambda que a Vercel usa)
  * Decide pelo env `VERCEL`/`AWS_LAMBDA_FUNCTION_NAME` presentes na Vercel.
  */
+// Flags extras pra reduzir consumo de memória do Chromium na lambda (1024MB no
+// plano Hobby). Sem elas, o Chromium + buffers de render estouram a RAM e a
+// função morre com 500 sem body (OOM que o try-catch JS não pega).
+const CHROMIUM_LOW_MEM_ARGS = [
+  "--disable-dev-shm-usage",       // usa /tmp em vez de /dev/shm (que é minúsculo na lambda)
+  "--disable-gpu",
+  "--no-sandbox",
+  "--single-process",              // 1 processo só — bem menos RAM
+  "--no-zygote",
+  "--disable-extensions",
+  "--disable-background-networking",
+  "--disable-default-apps",
+  "--mute-audio",
+  "--disable-features=site-per-process",
+]
+
 async function launchChromium() {
   const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
   if (isServerless) {
@@ -25,9 +41,12 @@ async function launchChromium() {
     const sparticuz = (sparticuzModule as { default?: typeof sparticuzModule }).default ?? sparticuzModule
     // @ts-expect-error — @sparticuz/chromium tem tipos frouxos entre versões
     const executablePath = await sparticuz.executablePath()
+    // Combina os args do sparticuz com os nossos de baixa memória (dedup).
+    // @ts-expect-error — args tem shape específico do sparticuz
+    const baseArgs: string[] = Array.isArray(sparticuz.args) ? sparticuz.args : []
+    const args = Array.from(new Set([...baseArgs, ...CHROMIUM_LOW_MEM_ARGS]))
     return pwCore.launch({
-      // @ts-expect-error — args tem shape específico do sparticuz
-      args: sparticuz.args,
+      args,
       executablePath,
       headless: true,
     })
@@ -477,9 +496,12 @@ export async function renderizarVarias(htmls: string[], tipo: TipoCriativo): Pro
   const resultado: Buffer[][] = []
 
   try {
+    // deviceScaleFactor: na lambda usamos 1 (1080px nativo — memória 4x menor
+    // que @2x, evita OOM). Local/self-host mantém 2 (retina) pra qualidade.
+    const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
     const context = await browser.newContext({
       viewport: { width, height },
-      deviceScaleFactor: 2,  // retina
+      deviceScaleFactor: isServerless ? 1 : 2,
     })
 
     for (const html of htmls) {
